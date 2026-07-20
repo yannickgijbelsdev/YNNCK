@@ -112,9 +112,8 @@ const Banner = () => {
         ) : null
       )}
 
-      {/* Neutral base + contrast overlay for legible text */}
+      {/* Neutral base only when no image is available */}
       {!hasImage && <div className="absolute inset-0 bg-neutral-900" />}
-      <div className="pointer-events-none absolute inset-0 bg-black/40" />
 
       {/* Logo, top-left, directly on the photo (white line-art) */}
       <img

@@ -1,5 +1,5 @@
 @import url("https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap");
-@import url("https://fonts.cdnfonts.com/css/lovelo");
+@import url("https://fonts.cdnfonts.com/css/lexend");
 
 @tailwind base;
 @tailwind components;
@@ -17,8 +17,8 @@ body {
 }
 
 .brand-display {
-    font-family: "Lovelo", "Inter", "Helvetica Neue", Arial, sans-serif;
-    letter-spacing: 0.01em;
+    font-family: "Lexend", "Inter", "Helvetica Neue", Arial, sans-serif;
+    letter-spacing: -0.01em;
 }
 
 .text-balance {

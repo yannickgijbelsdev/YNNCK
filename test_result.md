@@ -136,15 +136,26 @@ backend:
         -comment: "✅ TESTED & VERIFIED: GET /api/popup-logo endpoint working correctly. All tests passed: (1) Returns HTTP 200, (2) Content-Type is application/json, (3) Response has 'items' key (list) and 'count' key (integer), (4) Items are normalized with 'title' and 'image' fields - verified with 1 item from upstream, (5) Does NOT return 500 error, (6) Error handling is in place for graceful degradation. Tested via https://saffron-header.preview.emergentagent.com/api/popup-logo. Backend logs show no errors."
 
 frontend:
-  - task: "Banner consumes /api/news, shows article title + feature image, no View project, not clickable"
+  - task: "Mobile background scaling + no title/text + logo wiggle + logo-hover popup with close"
     implemented: true
     working: "NA"
     file: "frontend/src/components/Banner.jsx"
     stuck_count: 0
     priority: "high"
-    needs_retesting: false
+    needs_retesting: true
     status_history:
         -working: "NA"
+        -agent: "main"
+        -comment: "User reported bug: background not visible on mobile. Fixed by using bg-cover/bg-center background divs with h-[100svh] min-h-[100svh]. Also removed the bottom marquee title (no title/no text), added periodic logo wiggle, and a logo-hover popup that shows /api/popup-logo content (image + title) with an X close button. Please verify on BOTH desktop (1920x800) and mobile (390x844)."
+  - task: "Banner consumes /api/news, background = feature image, not clickable"
+    implemented: true
+    working: true
+    file: "frontend/src/components/Banner.jsx"
+    stuck_count: 0
+    priority: "medium"
+    needs_retesting: false
+    status_history:
+        -working: true
         -agent: "main"
         -comment: "Fetches /api/news; falls back to placeholder slides when API returns 0 articles. No navigation/links."
 

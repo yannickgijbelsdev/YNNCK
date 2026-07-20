@@ -122,6 +122,25 @@ body {
     animation-play-state: paused;
 }
 
+/* Animated neutral-dark gradient background */
+@keyframes gradientShift {
+    0% {
+        background-position: 0% 50%;
+    }
+    50% {
+        background-position: 100% 50%;
+    }
+    100% {
+        background-position: 0% 50%;
+    }
+}
+
+.animated-gradient {
+    background: linear-gradient(120deg, #050505, #1b1b1b, #2c2c2c, #161616, #0a0a0a);
+    background-size: 320% 320%;
+    animation: gradientShift 22s ease infinite;
+}
+
 .title-outline {
     color: transparent;
     -webkit-text-stroke: 0.75px #ffffff;

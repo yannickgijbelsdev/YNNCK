@@ -53,22 +53,16 @@ body {
 
 .title-outline {
     color: transparent;
-    -webkit-text-stroke: 2px #ffffff;
-    text-stroke: 2px #ffffff;
+    -webkit-text-stroke: 1px #ffffff;
+    text-stroke: 1px #ffffff;
     paint-order: stroke fill;
 }
 
 @media (min-width: 768px) {
     .title-outline {
-        -webkit-text-stroke-width: 2.5px;
-        text-stroke-width: 2.5px;
+        -webkit-text-stroke-width: 1px;
+        text-stroke-width: 1px;
     }
-}
-
-.title-outline-dot {
-    -webkit-text-stroke-width: 0;
-    text-stroke-width: 0;
-    color: rgba(255, 255, 255, 0.85);
 }
 
 code {

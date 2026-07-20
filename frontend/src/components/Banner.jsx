@@ -1,7 +1,7 @@
 import React, { useEffect, useMemo, useState, useCallback } from "react";
 import { Pause, Play } from "lucide-react";
 import axios from "axios";
-import logo from "../assets/logo_white.png";
+import logo from "../assets/logo_original_cropped.png";
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 const API = `${BACKEND_URL}/api`;
@@ -177,8 +177,7 @@ const Banner = () => {
                     key={i}
                     className="brand-display title-outline flex items-center whitespace-nowrap text-6xl font-extrabold uppercase leading-none sm:text-7xl md:text-8xl"
                   >
-                    <span className="px-6 sm:px-10">{current.title}</span>
-                    <span className="title-outline-dot px-1">&bull;</span>
+                    <span className="px-8 sm:px-12">{current.title}</span>
                   </span>
                 ))}
               </div>

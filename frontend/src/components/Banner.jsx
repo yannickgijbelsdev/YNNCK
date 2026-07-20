@@ -1,6 +1,7 @@
 import React, { useEffect, useMemo, useState, useCallback } from "react";
 import { Pause, Play } from "lucide-react";
 import axios from "axios";
+import logo from "../assets/logo.png";
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 const API = `${BACKEND_URL}/api`;
@@ -114,6 +115,15 @@ const Banner = () => {
       {/* Neutral base + contrast overlay for legible text */}
       {!hasImage && <div className="absolute inset-0 bg-neutral-900" />}
       <div className="pointer-events-none absolute inset-0 bg-black/40" />
+
+      {/* Logo, top-left, directly on the photo (rendered in white) */}
+      <img
+        src={logo}
+        alt="Logo"
+        className="absolute left-5 top-5 z-20 h-14 w-auto object-contain sm:left-8 sm:top-8 sm:h-16 md:h-20"
+        style={{ filter: "brightness(0) invert(1)" }}
+        draggable={false}
+      />
 
       {/* Pause / play control */}
       {total > 1 && (

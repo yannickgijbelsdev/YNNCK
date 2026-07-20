@@ -24,10 +24,17 @@ const Panel = ({ image }) => (
     className="relative h-full w-screen flex-shrink-0 overflow-hidden"
     data-testid="carousel-panel"
   >
-    {/* Blurred background made from the same image */}
+    {/* Blurred background made from the same image, edges faded so
+        neighbouring panels blend into the dark base instead of hard blocks */}
     <div
-      className="absolute inset-0 scale-125 bg-cover bg-center blur-2xl"
-      style={{ backgroundImage: `url("${image}")` }}
+      className="absolute inset-0 scale-150 bg-cover bg-center blur-3xl"
+      style={{
+        backgroundImage: `url("${image}")`,
+        WebkitMaskImage:
+          "linear-gradient(to right, transparent 0%, black 22%, black 78%, transparent 100%)",
+        maskImage:
+          "linear-gradient(to right, transparent 0%, black 22%, black 78%, transparent 100%)",
+      }}
       aria-hidden="true"
     />
     {/* Subtle dark gradient layer over the blurred image */}
@@ -98,8 +105,8 @@ const Banner = () => {
   // Duplicate the panels so the horizontal loop is seamless.
   const loopItems = useMemo(() => [...articles, ...articles], [articles]);
 
-  // Slower for few panels, keeps a comfortable reading pace.
-  const duration = Math.max(total * 9, 18);
+  // Slower, calm reading pace for the horizontal scroll.
+  const duration = Math.max(total * 16, 34);
 
   if (loading) {
     return (

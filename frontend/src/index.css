@@ -101,6 +101,27 @@ body {
     }
 }
 
+/* Horizontal auto-scrolling carousel track */
+@keyframes hscroll {
+    from {
+        transform: translateX(0);
+    }
+    to {
+        transform: translateX(-50%);
+    }
+}
+
+.hscroll-track {
+    animation-name: hscroll;
+    animation-timing-function: linear;
+    animation-iteration-count: infinite;
+    will-change: transform;
+}
+
+.hscroll-track:hover {
+    animation-play-state: paused;
+}
+
 .title-outline {
     color: transparent;
     -webkit-text-stroke: 0.75px #ffffff;

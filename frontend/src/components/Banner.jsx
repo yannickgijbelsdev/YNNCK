@@ -1,14 +1,13 @@
-import React, { useEffect, useMemo, useState, useCallback } from "react";
-import { Pause, Play, X } from "lucide-react";
+import React, { useEffect, useMemo, useState } from "react";
+import { X } from "lucide-react";
 import axios from "axios";
 import logo from "../assets/logo_original_cropped.png";
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 const API = `${BACKEND_URL}/api`;
-const ROTATE_MS = 5000;
 
-// Fallback slides shown ONLY when the news API returns 0 articles,
-// so the banner never appears empty.
+// Fallback slides shown ONLY when the news API returns 0 projects,
+// so the carousel never appears empty.
 const FALLBACK = [
   {
     image:
@@ -20,16 +19,42 @@ const FALLBACK = [
   },
 ];
 
+const Panel = ({ image }) => (
+  <div
+    className="relative h-full w-screen flex-shrink-0 overflow-hidden"
+    data-testid="carousel-panel"
+  >
+    {/* Blurred background made from the same image */}
+    <div
+      className="absolute inset-0 scale-125 bg-cover bg-center blur-2xl"
+      style={{ backgroundImage: `url("${image}")` }}
+      aria-hidden="true"
+    />
+    {/* Subtle dark gradient layer over the blurred image */}
+    <div
+      className="absolute inset-0 bg-gradient-to-b from-black/50 via-black/20 to-black/60"
+      aria-hidden="true"
+    />
+    {/* Sharp, fully-visible central image */}
+    <div className="absolute inset-0 flex items-center justify-center p-6 sm:p-10">
+      <img
+        src={image}
+        alt=""
+        className="max-h-[82%] max-w-[88%] rounded-lg object-contain shadow-2xl"
+        draggable={false}
+      />
+    </div>
+  </div>
+);
+
 const Banner = () => {
   const [articles, setArticles] = useState([]);
-  const [active, setActive] = useState(0);
-  const [paused, setPaused] = useState(false);
   const [loading, setLoading] = useState(true);
 
   const [popup, setPopup] = useState(null); // { title, image }
   const [popupOpen, setPopupOpen] = useState(false);
 
-  // Fetch background articles
+  // Fetch projects for the carousel
   useEffect(() => {
     let mounted = true;
     (async () => {
@@ -70,65 +95,73 @@ const Banner = () => {
 
   const total = articles.length;
 
-  const next = useCallback(() => {
-    setActive((prev) => (total ? (prev + 1) % total : 0));
-  }, [total]);
+  // Duplicate the panels so the horizontal loop is seamless.
+  const loopItems = useMemo(() => [...articles, ...articles], [articles]);
 
-  useEffect(() => {
-    if (paused || total <= 1) return undefined;
-    const id = setInterval(next, ROTATE_MS);
-    return () => clearInterval(id);
-  }, [paused, next, total]);
-
-  const hasImage = useMemo(() => articles.some((a) => a.image), [articles]);
+  // Slower for few panels, keeps a comfortable reading pace.
+  const duration = Math.max(total * 9, 18);
 
   if (loading) {
-    return <section className="h-[100svh] w-full bg-neutral-900" />;
+    return (
+      <section
+        className="h-[100svh] w-full"
+        style={{
+          background:
+            "radial-gradient(120% 120% at 50% 0%, #2a2a2a 0%, #171717 55%, #0a0a0a 100%)",
+        }}
+      />
+    );
   }
 
   return (
-    <section className="relative h-[100svh] min-h-[100svh] w-full overflow-hidden bg-neutral-900 text-white">
-      {/* Background feature images: scale to cover on every device */}
-      {articles.map((a, i) =>
-        a.image ? (
-          <div
-            key={`${a.image}-${i}`}
-            aria-hidden={i !== active}
-            className="absolute inset-0 bg-cover bg-center will-change-transform"
-            style={{
-              backgroundImage: `url("${a.image}")`,
-              opacity: i === active ? 1 : 0,
-              transform: i === active ? "scale(1.08)" : "scale(1)",
-              transition:
-                "opacity 1000ms ease-in-out, transform 7000ms ease-out",
-            }}
-          />
-        ) : null
+    <section
+      className="relative h-[100svh] min-h-[100svh] w-full overflow-hidden text-white"
+      style={{
+        background:
+          "radial-gradient(120% 120% at 50% 0%, #2a2a2a 0%, #171717 55%, #0a0a0a 100%)",
+      }}
+      data-testid="banner-section"
+    >
+      {/* Horizontal auto-scrolling carousel */}
+      {total > 0 && (
+        <div
+          className="hscroll-track absolute left-0 top-0 flex h-full w-max"
+          style={{ animationDuration: `${duration}s` }}
+          data-testid="carousel-track"
+        >
+          {loopItems.map((a, i) => (
+            <Panel key={`${a.image}-${i}`} image={a.image} />
+          ))}
+        </div>
       )}
-
-      {!hasImage && <div className="absolute inset-0 bg-neutral-900" />}
 
       {/* Logo (top-left) with hover popup */}
       <div
         className="absolute left-5 top-5 z-30 sm:left-8 sm:top-8"
         onMouseEnter={() => setPopupOpen(true)}
         onMouseLeave={() => setPopupOpen(false)}
+        data-testid="logo-wrapper"
       >
         <img
           src={logo}
           alt="Logo"
           className="logo-wiggle h-16 w-auto cursor-pointer object-contain sm:h-20 md:h-24"
           draggable={false}
+          data-testid="brand-logo"
         />
 
         {/* Popup */}
         {popupOpen && popup && (
-          <div className="popup-in absolute left-0 top-full mt-3 w-[280px] overflow-hidden rounded-2xl bg-white text-neutral-900 shadow-2xl ring-1 ring-black/10 sm:w-[320px]">
+          <div
+            className="popup-in absolute left-0 top-full mt-3 w-[280px] overflow-hidden rounded-2xl bg-white text-neutral-900 shadow-2xl ring-1 ring-black/10 sm:w-[320px]"
+            data-testid="logo-popup"
+          >
             <button
               type="button"
               onClick={() => setPopupOpen(false)}
               aria-label="Sluiten"
               className="absolute right-2 top-2 z-10 flex h-8 w-8 items-center justify-center rounded-full bg-black/60 text-white transition-colors duration-200 hover:bg-black"
+              data-testid="logo-popup-close"
             >
               <X className="h-4 w-4" />
             </button>
@@ -150,38 +183,6 @@ const Banner = () => {
           </div>
         )}
       </div>
-
-      {/* Pause / play control */}
-      {total > 1 && (
-        <button
-          type="button"
-          onClick={() => setPaused((p) => !p)}
-          aria-label={paused ? "Play the carousel" : "Pause the carousel"}
-          className="group absolute left-5 top-1/2 z-20 flex h-11 w-11 -translate-y-1/2 items-center justify-center rounded-md bg-white/15 backdrop-blur-sm transition-colors duration-300 hover:bg-white/30 md:left-10"
-        >
-          {paused ? (
-            <Play className="h-4 w-4 fill-white" strokeWidth={0} />
-          ) : (
-            <Pause className="h-4 w-4 fill-white" strokeWidth={0} />
-          )}
-        </button>
-      )}
-
-      {/* Slide indicators */}
-      {total > 1 && (
-        <div className="absolute bottom-8 left-1/2 z-20 flex -translate-x-1/2 gap-2">
-          {articles.map((a, i) => (
-            <span
-              key={i}
-              className="h-1.5 rounded-full bg-white transition-all duration-500"
-              style={{
-                width: i === active ? 28 : 8,
-                opacity: i === active ? 1 : 0.4,
-              }}
-            />
-          ))}
-        </div>
-      )}
     </section>
   );
 };

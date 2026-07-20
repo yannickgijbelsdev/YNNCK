@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useState, useCallback } from "react";
-import { Pause, Play } from "lucide-react";
+import { Pause, Play, X } from "lucide-react";
 import axios from "axios";
 import logo from "../assets/logo_original_cropped.png";
 
@@ -8,21 +8,13 @@ const API = `${BACKEND_URL}/api`;
 const ROTATE_MS = 5000;
 
 // Fallback slides shown ONLY when the news API returns 0 articles,
-// so the banner never appears empty. Replaced automatically once the
-// API has articles.
+// so the banner never appears empty.
 const FALLBACK = [
   {
-    title: "Er zijn nog geen artikelen gepubliceerd",
     image:
       "https://images.unsplash.com/photo-1504711434969-e33886168f5c?auto=format&fit=crop&w=1920&q=80",
   },
   {
-    title: "Zodra de redactie content plaatst verschijnt die hier",
-    image:
-      "https://images.unsplash.com/photo-1585829365295-ab7cd400c167?auto=format&fit=crop&w=1920&q=80",
-  },
-  {
-    title: "Nieuws van YNNCK",
     image:
       "https://images.unsplash.com/photo-1495020689067-958852a7765e?auto=format&fit=crop&w=1920&q=80",
   },
@@ -30,33 +22,45 @@ const FALLBACK = [
 
 const Banner = () => {
   const [articles, setArticles] = useState([]);
-  const [usingFallback, setUsingFallback] = useState(false);
   const [active, setActive] = useState(0);
   const [paused, setPaused] = useState(false);
   const [loading, setLoading] = useState(true);
 
+  const [popup, setPopup] = useState(null); // { title, image }
+  const [popupOpen, setPopupOpen] = useState(false);
+
+  // Fetch background articles
   useEffect(() => {
     let mounted = true;
     (async () => {
       try {
         const { data } = await axios.get(`${API}/news`);
         const items = (data.items || [])
-          .filter((it) => it.title)
-          .map((it) => ({ title: it.title, image: it.image }));
+          .filter((it) => it.image)
+          .map((it) => ({ image: it.image }));
         if (!mounted) return;
-        if (items.length > 0) {
-          setArticles(items);
-          setUsingFallback(false);
-        } else {
-          setArticles(FALLBACK);
-          setUsingFallback(true);
-        }
+        setArticles(items.length > 0 ? items : FALLBACK);
       } catch (e) {
-        if (!mounted) return;
-        setArticles(FALLBACK);
-        setUsingFallback(true);
+        if (mounted) setArticles(FALLBACK);
       } finally {
         if (mounted) setLoading(false);
+      }
+    })();
+    return () => {
+      mounted = false;
+    };
+  }, []);
+
+  // Fetch popup content (shown when hovering the logo)
+  useEffect(() => {
+    let mounted = true;
+    (async () => {
+      try {
+        const { data } = await axios.get(`${API}/popup-logo`);
+        const first = (data.items || [])[0];
+        if (mounted && first) setPopup({ title: first.title, image: first.image });
+      } catch (e) {
+        /* ignore */
       }
     })();
     return () => {
@@ -76,54 +80,78 @@ const Banner = () => {
     return () => clearInterval(id);
   }, [paused, next, total]);
 
-  const current = articles[active];
-
-  const hasImage = useMemo(
-    () => articles.some((a) => a.image),
-    [articles]
-  );
+  const hasImage = useMemo(() => articles.some((a) => a.image), [articles]);
 
   if (loading) {
     return <section className="h-[100svh] w-full bg-neutral-900" />;
   }
 
   return (
-    <section className="relative h-[100svh] w-full overflow-hidden bg-neutral-800 text-white">
-      {/* Background feature images (crossfading with slow zoom) */}
+    <section className="relative h-[100svh] min-h-[100svh] w-full overflow-hidden bg-neutral-900 text-white">
+      {/* Background feature images: scale to cover on every device */}
       {articles.map((a, i) =>
         a.image ? (
           <div
             key={`${a.image}-${i}`}
             aria-hidden={i !== active}
-            className="absolute inset-0 transition-opacity duration-1000 ease-in-out"
-            style={{ opacity: i === active ? 1 : 0 }}
-          >
-            <img
-              src={a.image}
-              alt=""
-              className="h-full w-full object-cover will-change-transform"
-              style={{
-                transform: i === active ? "scale(1.08)" : "scale(1)",
-                transition: "transform 7s ease-out",
-              }}
-              draggable={false}
-            />
-          </div>
+            className="absolute inset-0 bg-cover bg-center will-change-transform"
+            style={{
+              backgroundImage: `url("${a.image}")`,
+              opacity: i === active ? 1 : 0,
+              transform: i === active ? "scale(1.08)" : "scale(1)",
+              transition:
+                "opacity 1000ms ease-in-out, transform 7000ms ease-out",
+            }}
+          />
         ) : null
       )}
 
-      {/* Neutral base only when no image is available */}
       {!hasImage && <div className="absolute inset-0 bg-neutral-900" />}
 
-      {/* Logo, top-left, directly on the photo (white line-art) */}
-      <img
-        src={logo}
-        alt="Logo"
-        className="absolute left-5 top-5 z-20 h-16 w-auto object-contain sm:left-8 sm:top-8 sm:h-20 md:h-24"
-        draggable={false}
-      />
+      {/* Logo (top-left) with hover popup */}
+      <div
+        className="absolute left-5 top-5 z-30 sm:left-8 sm:top-8"
+        onMouseEnter={() => setPopupOpen(true)}
+        onMouseLeave={() => setPopupOpen(false)}
+      >
+        <img
+          src={logo}
+          alt="Logo"
+          className="logo-wiggle h-16 w-auto cursor-pointer object-contain sm:h-20 md:h-24"
+          draggable={false}
+        />
 
-      {/* Pause / play control (left, vertically centred) */}
+        {/* Popup */}
+        {popupOpen && popup && (
+          <div className="popup-in absolute left-0 top-full mt-3 w-[280px] overflow-hidden rounded-2xl bg-white text-neutral-900 shadow-2xl ring-1 ring-black/10 sm:w-[320px]">
+            <button
+              type="button"
+              onClick={() => setPopupOpen(false)}
+              aria-label="Sluiten"
+              className="absolute right-2 top-2 z-10 flex h-8 w-8 items-center justify-center rounded-full bg-black/60 text-white transition-colors duration-200 hover:bg-black"
+            >
+              <X className="h-4 w-4" />
+            </button>
+            {popup.image && (
+              <img
+                src={popup.image}
+                alt={popup.title || ""}
+                className="h-40 w-full object-cover sm:h-44"
+                draggable={false}
+              />
+            )}
+            {popup.title && (
+              <div className="px-4 py-3">
+                <p className="text-lg font-semibold leading-tight">
+                  {popup.title}
+                </p>
+              </div>
+            )}
+          </div>
+        )}
+      </div>
+
+      {/* Pause / play control */}
       {total > 1 && (
         <button
           type="button"
@@ -139,9 +167,9 @@ const Banner = () => {
         </button>
       )}
 
-      {/* Slide indicators (top-right) */}
+      {/* Slide indicators */}
       {total > 1 && (
-        <div className="absolute right-6 top-8 z-20 flex gap-2">
+        <div className="absolute bottom-8 left-1/2 z-20 flex -translate-x-1/2 gap-2">
           {articles.map((a, i) => (
             <span
               key={i}
@@ -152,36 +180,6 @@ const Banner = () => {
               }}
             />
           ))}
-        </div>
-      )}
-
-      {/* Bottom marquee: article title looping, outlined only (not clickable) */}
-      {current && (
-        <div className="absolute bottom-6 left-0 z-10 w-full overflow-hidden sm:bottom-8">
-          <div
-            className="flex w-max"
-            style={{
-              animation: "marquee 26s linear infinite",
-              animationPlayState: paused ? "paused" : "running",
-            }}
-          >
-            {[0, 1].map((track) => (
-              <div
-                key={`track-${track}-${active}`}
-                aria-hidden={track === 1}
-                className="flex shrink-0 items-center"
-              >
-                {Array.from({ length: 8 }).map((_, i) => (
-                  <span
-                    key={i}
-                    className="brand-display title-outline flex items-center whitespace-nowrap text-6xl font-extrabold uppercase leading-none sm:text-7xl md:text-8xl"
-                  >
-                    <span className="px-8 sm:px-12">{current.title}</span>
-                  </span>
-                ))}
-              </div>
-            ))}
-          </div>
         </div>
       )}
     </section>

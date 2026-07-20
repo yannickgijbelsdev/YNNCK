@@ -46,6 +46,7 @@ async def root():
 
 
 NEWS_API_URL = "http://clr.koodh.com/api/news/ynnck/homepagina?limit=50"
+POPUP_LOGO_API_URL = "http://clr.koodh.com/api/news/ynnck/popup-logo?limit=20"
 
 
 def _pick(d, keys):
@@ -107,6 +108,25 @@ async def get_news():
         data = await asyncio.to_thread(fetch)
     except Exception as e:
         logger.error(f"Failed to fetch news API: {e}")
+        return {"items": [], "count": 0, "error": str(e)}
+
+    raw_items = data.get("items", []) if isinstance(data, dict) else []
+    items = [_normalize_item(it) for it in (raw_items or [])]
+    return {"items": items, "count": len(items)}
+
+
+@api_router.get("/popup-logo")
+async def get_popup_logo():
+    """Proxy for the external (HTTP) popup-logo API used by the logo hover popup."""
+    def fetch():
+        r = requests.get(POPUP_LOGO_API_URL, timeout=20, allow_redirects=True)
+        r.raise_for_status()
+        return r.json()
+
+    try:
+        data = await asyncio.to_thread(fetch)
+    except Exception as e:
+        logger.error(f"Failed to fetch popup-logo API: {e}")
         return {"items": [], "count": 0, "error": str(e)}
 
     raw_items = data.get("items", []) if isinstance(data, dict) else []

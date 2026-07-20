@@ -20,6 +20,27 @@ body {
     letter-spacing: -0.03em;
 }
 
+.text-balance {
+    text-wrap: balance;
+}
+
+@keyframes titleReveal {
+    0% {
+        opacity: 0;
+        transform: translateY(24px);
+        filter: blur(4px);
+    }
+    100% {
+        opacity: 1;
+        transform: translateY(0);
+        filter: blur(0);
+    }
+}
+
+.title-reveal {
+    animation: titleReveal 0.8s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
 code {
     font-family:
         source-code-pro, Menlo, Monaco, Consolas, "Courier New", monospace;

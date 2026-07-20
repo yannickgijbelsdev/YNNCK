@@ -101,3 +101,53 @@
 #====================================================================================================
 # Testing Data - Main Agent and testing sub agent both should log testing data below this section
 #====================================================================================================
+
+user_problem_statement: "Clone of Saffron banner. Now integrate external news API (http://clr.koodh.com/api/news/ynnck/homepagina) via backend proxy. Banner title = article title, background = feature image. Remove View project, banner not clickable."
+
+backend:
+  - task: "News API proxy endpoint /api/news"
+    implemented: true
+    working: true
+    file: "backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+        -working: "NA"
+        -agent: "main"
+        -comment: "Added GET /api/news that fetches http://clr.koodh.com/api/news/ynnck/homepagina (follows redirect) and normalizes items to {title, image}. External source currently returns 0 items so response is {items: [], count: 0}. Verify endpoint returns 200 with correct shape and handles the empty-items and error cases gracefully."
+        -working: true
+        -agent: "testing"
+        -comment: "✅ TESTED & VERIFIED: GET /api/news endpoint working correctly. All tests passed: (1) Returns HTTP 200, (2) Content-Type is application/json, (3) Response has 'items' key (list) and 'count' key (integer), (4) Does NOT return 500 error, (5) Error handling is in place. Note: Upstream API now has 1 article (was 0 before), endpoint correctly fetches and normalizes data to {title, image, raw}. Tested via https://saffron-header.preview.emergentagent.com/api/news"
+
+frontend:
+  - task: "Banner consumes /api/news, shows article title + feature image, no View project, not clickable"
+    implemented: true
+    working: "NA"
+    file: "frontend/src/components/Banner.jsx"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+        -working: "NA"
+        -agent: "main"
+        -comment: "Fetches /api/news; falls back to placeholder slides when API returns 0 articles. No navigation/links."
+
+metadata:
+  created_by: "main_agent"
+  version: "1.0"
+  test_sequence: 2
+  run_ui: false
+
+test_plan:
+  current_focus:
+    - "News API proxy endpoint /api/news"
+  stuck_tasks: []
+  test_all: false
+  test_priority: "high_first"
+
+agent_communication:
+    -agent: "main"
+    -message: "Please test only the backend endpoint GET /api/news. It proxies an external HTTP API. Confirm: returns HTTP 200, JSON has keys 'items' (list) and 'count' (int); given the upstream currently has 0 articles, items should be an empty list; endpoint should not 500 even if upstream is slow/unreachable (it catches exceptions and returns items: [] with an 'error' field)."
+    -agent: "testing"
+    -message: "Backend testing complete. GET /api/news endpoint is fully functional and passes all verification criteria. The endpoint correctly proxies the external news API, returns proper JSON structure with 'items' (list) and 'count' (integer), handles errors gracefully without 500 errors, and successfully normalizes article data. Upstream API now contains 1 article (previously 0), which the endpoint correctly fetches and transforms. No critical issues found. Backend is ready for production."

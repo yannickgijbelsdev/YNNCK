@@ -53,15 +53,15 @@ body {
 
 .title-outline {
     color: transparent;
-    -webkit-text-stroke: 0.5px #ffffff;
-    text-stroke: 0.5px #ffffff;
+    -webkit-text-stroke: 0.4px rgba(255, 255, 255, 0.55);
+    text-stroke: 0.4px rgba(255, 255, 255, 0.55);
     paint-order: stroke fill;
 }
 
 @media (min-width: 768px) {
     .title-outline {
-        -webkit-text-stroke-width: 0.5px;
-        text-stroke-width: 0.5px;
+        -webkit-text-stroke-width: 0.4px;
+        text-stroke-width: 0.4px;
     }
 }
 

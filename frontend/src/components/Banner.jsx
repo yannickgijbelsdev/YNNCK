@@ -1,7 +1,7 @@
 import React, { useEffect, useMemo, useState, useCallback } from "react";
 import { Pause, Play } from "lucide-react";
 import axios from "axios";
-import logo from "../assets/logo.png";
+import logo from "../assets/logo_white.png";
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 const API = `${BACKEND_URL}/api`;
@@ -116,22 +116,21 @@ const Banner = () => {
       {!hasImage && <div className="absolute inset-0 bg-neutral-900" />}
       <div className="pointer-events-none absolute inset-0 bg-black/40" />
 
-      {/* Logo, top-left, directly on the photo (rendered in white) */}
+      {/* Logo, top-left, directly on the photo (white line-art) */}
       <img
         src={logo}
         alt="Logo"
-        className="absolute left-5 top-5 z-20 h-14 w-auto object-contain sm:left-8 sm:top-8 sm:h-16 md:h-20"
-        style={{ filter: "brightness(0) invert(1)" }}
+        className="absolute left-5 top-5 z-20 h-16 w-auto object-contain sm:left-8 sm:top-8 sm:h-20 md:h-24"
         draggable={false}
       />
 
-      {/* Pause / play control */}
+      {/* Pause / play control (left, vertically centred) */}
       {total > 1 && (
         <button
           type="button"
           onClick={() => setPaused((p) => !p)}
           aria-label={paused ? "Play the carousel" : "Pause the carousel"}
-          className="group absolute bottom-6 left-5 z-20 flex h-11 w-11 items-center justify-center rounded-md bg-white/15 backdrop-blur-sm transition-colors duration-300 hover:bg-white/30 md:bottom-auto md:left-10 md:top-1/2 md:-translate-y-1/2"
+          className="group absolute left-5 top-1/2 z-20 flex h-11 w-11 -translate-y-1/2 items-center justify-center rounded-md bg-white/15 backdrop-blur-sm transition-colors duration-300 hover:bg-white/30 md:left-10"
         >
           {paused ? (
             <Play className="h-4 w-4 fill-white" strokeWidth={0} />
@@ -141,23 +140,9 @@ const Banner = () => {
         </button>
       )}
 
-      {/* Centre: article title (not clickable, no navigation) */}
-      <div className="absolute inset-0 z-10 flex items-center justify-center px-6 sm:px-10">
-        <div className="w-full max-w-5xl text-center">
-          {current && (
-            <h1
-              key={`${active}-${current.title}`}
-              className="brand-display title-reveal text-balance text-3xl font-bold uppercase leading-[1.05] tracking-tight sm:text-5xl md:text-6xl lg:text-7xl"
-            >
-              {current.title}
-            </h1>
-          )}
-        </div>
-      </div>
-
-      {/* Slide indicators */}
+      {/* Slide indicators (top-right) */}
       {total > 1 && (
-        <div className="absolute bottom-8 left-1/2 z-20 flex -translate-x-1/2 gap-2">
+        <div className="absolute right-6 top-8 z-20 flex gap-2">
           {articles.map((a, i) => (
             <span
               key={i}
@@ -168,6 +153,37 @@ const Banner = () => {
               }}
             />
           ))}
+        </div>
+      )}
+
+      {/* Bottom marquee: article title looping, outlined only (not clickable) */}
+      {current && (
+        <div className="absolute bottom-6 left-0 z-10 w-full overflow-hidden sm:bottom-8">
+          <div
+            className="flex w-max"
+            style={{
+              animation: "marquee 26s linear infinite",
+              animationPlayState: paused ? "paused" : "running",
+            }}
+          >
+            {[0, 1].map((track) => (
+              <div
+                key={`track-${track}-${active}`}
+                aria-hidden={track === 1}
+                className="flex shrink-0 items-center"
+              >
+                {Array.from({ length: 8 }).map((_, i) => (
+                  <span
+                    key={i}
+                    className="brand-display title-outline flex items-center whitespace-nowrap text-6xl font-extrabold uppercase leading-none sm:text-7xl md:text-8xl"
+                  >
+                    <span className="px-6 sm:px-10">{current.title}</span>
+                    <span className="title-outline-dot px-1">&bull;</span>
+                  </span>
+                ))}
+              </div>
+            ))}
+          </div>
         </div>
       )}
     </section>

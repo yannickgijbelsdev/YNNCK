@@ -16,15 +16,23 @@ projects fetched from the Koodh `homepagina` API. User language: **Dutch**.
 
 ## Implemented (2026-06)
 - Backend HTTP→HTTPS proxies (`/api/news`, `/api/popup-logo`).
-- Wobbling logo (top-left) with hover popup pulling `/api/popup-logo`.
-- **Banner redesign (this session):**
-  - Neutral dark radial gradient background (visible while images load / as base).
-  - Horizontal auto-scrolling carousel of projects from `/api/news`.
-  - Each panel: sharp `object-contain` central image + blurred version of the
-    SAME image as full-bleed background + subtle dark gradient overlay.
-  - Seamless loop via duplicated panels + `translateX(-50%)` on a `w-max` track;
-    pauses on hover. No added titles or icons.
+- **Banner (current design):**
+  - Horizontal auto-scrolling carousel of projects from `/api/news`, driven by a
+    single `requestAnimationFrame` clock (transform + colour share one timeline).
+  - Sharp `object-contain` central image per panel; no per-panel blur.
+  - **Animated background colour that matches the on-screen photo**: backend
+    computes each image's dominant colour (Pillow, quantize) and returns it as
+    `color` in `/api/news`; frontend interpolates RGB between the current and
+    next panel's colour based on scroll fraction → always matches + smooth blend,
+    no hard transitions.
+  - Subtle static radial/linear overlay for depth (reads as a gradient).
+  - Wobbling logo top-left. **Logo hover popup removed.** Pause on hover.
   - Fallback slides only when the API returns 0 projects.
+
+## Backend colour extraction
+- `dominant_color(url)` in `server.py`: downloads image, thumbnails to 90px,
+  `quantize(6, FASTOCTREE)`, picks most frequent non-near-black colour. Cached
+  per URL in `_color_cache` (module-level).
 
 ## Notes / gotchas
 - The Emergent screenshot_tool's headless browser cannot reach the `/api/*`

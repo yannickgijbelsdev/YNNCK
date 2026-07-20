@@ -10,6 +10,8 @@ from typing import List
 import uuid
 import asyncio
 import requests
+import io
+from PIL import Image
 from datetime import datetime, timezone
 
 
@@ -47,6 +49,39 @@ async def root():
 
 NEWS_API_URL = "http://clr.koodh.com/api/news/ynnck/homepagina?limit=50"
 POPUP_LOGO_API_URL = "http://clr.koodh.com/api/news/ynnck/popup-logo?limit=20"
+
+# Cache dominant colours per image URL so we only download/analyse once.
+_color_cache = {}
+
+
+def dominant_color(url):
+    """Return the dominant colour of an image as a #rrggbb hex string."""
+    if not url:
+        return "#111111"
+    if url in _color_cache:
+        return _color_cache[url]
+    try:
+        r = requests.get(url, timeout=20)
+        r.raise_for_status()
+        img = Image.open(io.BytesIO(r.content)).convert("RGB")
+        img.thumbnail((90, 90))
+        q = img.quantize(colors=6, method=Image.FASTOCTREE)
+        palette = q.getpalette()
+        counts = sorted(q.getcolors(), reverse=True)  # [(count, index), ...]
+        # Prefer the most frequent colour that is not near-black.
+        chosen = counts[0][1]
+        for _, idx in counts:
+            rr, gg, bb = palette[idx * 3: idx * 3 + 3]
+            if rr + gg + bb > 60:  # skip pure black clumps
+                chosen = idx
+                break
+        rr, gg, bb = palette[chosen * 3: chosen * 3 + 3]
+        hex_color = f"#{rr:02x}{gg:02x}{bb:02x}"
+    except Exception as e:
+        logger.error(f"dominant_color failed for {url}: {e}")
+        hex_color = "#111111"
+    _color_cache[url] = hex_color
+    return hex_color
 
 
 def _pick(d, keys):
@@ -112,6 +147,12 @@ async def get_news():
 
     raw_items = data.get("items", []) if isinstance(data, dict) else []
     items = [_normalize_item(it) for it in (raw_items or [])]
+
+    def add_colors():
+        for it in items:
+            it["color"] = dominant_color(it.get("image"))
+
+    await asyncio.to_thread(add_colors)
     return {"items": items, "count": len(items)}
 
 

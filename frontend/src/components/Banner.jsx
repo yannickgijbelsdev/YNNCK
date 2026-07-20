@@ -1,6 +1,7 @@
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import axios from "axios";
 import logo from "../assets/logo_original_cropped.png";
+import jungleBg from "../assets/jungle_bg.png";
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 const API = `${BACKEND_URL}/api`;
@@ -48,6 +49,7 @@ const Banner = () => {
 
   const sectionRef = useRef(null);
   const trackRef = useRef(null);
+  const colorRef = useRef(null);
   const hoverRef = useRef(false);
 
   // Fetch projects for the carousel
@@ -101,8 +103,8 @@ const Banner = () => {
       const i1 = (i0 + 1) % total;
       const frac = t - Math.floor(t);
 
-      const [r0, g0, b0] = rgbs[i0];
-      const [r1, g1, b1] = rgbs[i1];
+      const [r0, g0, b0] = rgbs[i0] || [17, 17, 17];
+      const [r1, g1, b1] = rgbs[i1] || rgbs[i0] || [17, 17, 17];
       const r = Math.round(r0 + (r1 - r0) * frac);
       const g = Math.round(g0 + (g1 - g0) * frac);
       const b = Math.round(b0 + (b1 - b0) * frac);
@@ -110,8 +112,8 @@ const Banner = () => {
       if (trackRef.current) {
         trackRef.current.style.transform = `translateX(-${f * 50}%)`;
       }
-      if (sectionRef.current) {
-        sectionRef.current.style.backgroundColor = `rgb(${r}, ${g}, ${b})`;
+      if (colorRef.current) {
+        colorRef.current.style.backgroundColor = `rgba(${r}, ${g}, ${b}, 0.6)`;
       }
       raf = requestAnimationFrame(tick);
     };
@@ -129,12 +131,26 @@ const Banner = () => {
       className="relative h-[100svh] min-h-[100svh] w-full overflow-hidden bg-neutral-950 text-white"
       data-testid="banner-section"
     >
+      {/* Base jungle background image */}
+      <div
+        className="absolute inset-0 z-0 bg-cover bg-center"
+        style={{ backgroundImage: `url("${jungleBg}")` }}
+        aria-hidden="true"
+      />
+
+      {/* Animated colour tint that matches the on-screen photo (over the jungle) */}
+      <div
+        ref={colorRef}
+        className="pointer-events-none absolute inset-0 z-10"
+        aria-hidden="true"
+      />
+
       {/* Depth overlay so the colour reads as a soft gradient */}
       <div
-        className="pointer-events-none absolute inset-0 z-10"
+        className="pointer-events-none absolute inset-0 z-[11]"
         style={{
           background:
-            "radial-gradient(120% 90% at 50% 25%, rgba(255,255,255,0.08) 0%, transparent 45%), linear-gradient(to bottom, rgba(0,0,0,0.25) 0%, rgba(0,0,0,0.12) 40%, rgba(0,0,0,0.6) 100%)",
+            "radial-gradient(120% 90% at 50% 25%, rgba(255,255,255,0.06) 0%, transparent 45%), linear-gradient(to bottom, rgba(0,0,0,0.25) 0%, rgba(0,0,0,0.12) 40%, rgba(0,0,0,0.6) 100%)",
         }}
         aria-hidden="true"
       />

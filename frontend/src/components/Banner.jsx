@@ -5,6 +5,10 @@ import logo from "../assets/logo_original_cropped.png";
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 const API = `${BACKEND_URL}/api`;
 
+// Fraction of the viewport height used as the pitch between panels.
+// Smaller = tiles sit closer together.
+const PANEL_FRAC = 0.58;
+
 // Fallback slides shown ONLY when the news API returns 0 projects.
 const FALLBACK = [
   {
@@ -77,7 +81,7 @@ const CircularText = ({ text, rx, ry }) => {
 
 const Panel = React.forwardRef(({ image, title, excerpt }, ref) => (
   <div
-    className="flex h-[100svh] w-full flex-shrink-0 items-center justify-center p-6 sm:p-10"
+    className="flex h-[58svh] w-full flex-shrink-0 items-center justify-center p-6 sm:p-10"
     data-testid="carousel-panel"
   >
     <div
@@ -136,6 +140,14 @@ const Banner = () => {
   const hoverRef = useRef(false);
   const lastInteractRef = useRef(0);
   const panelRefs = useRef([]);
+  const logoWrapRef = useRef(null);
+
+  const handleMouseMove = (e) => {
+    if (!logoWrapRef.current) return;
+    const nx = e.clientX / window.innerWidth - 0.5;
+    const ny = e.clientY / window.innerHeight - 0.5;
+    logoWrapRef.current.style.transform = `translate(${nx * 28}px, ${ny * 28}px)`;
+  };
 
   // Fetch projects for the carousel
   useEffect(() => {
@@ -195,7 +207,8 @@ const Banner = () => {
 
       if (container) {
         const vh = container.clientHeight || 1;
-        const setH = total * vh;
+        const pitch = vh * PANEL_FRAC;
+        const setH = total * pitch;
 
         if (!inited && setH > 0) {
           container.scrollTop = setH; // start in the middle copy
@@ -203,14 +216,14 @@ const Banner = () => {
         }
 
         const idle = !hoverRef.current && now - lastInteractRef.current > 2200;
-        if (idle) container.scrollTop += (vh / secPerPanel) * dt;
+        if (idle) container.scrollTop += (pitch / secPerPanel) * dt;
 
         // Keep scroll position inside the middle copy for a seamless loop.
         if (container.scrollTop >= 2 * setH) container.scrollTop -= setH;
         else if (container.scrollTop < setH) container.scrollTop += setH;
 
         // Background colour from the panel nearest the centre.
-        const x = container.scrollTop / vh;
+        const x = container.scrollTop / pitch;
         const base = Math.round(x);
         const off = x - base; // -0.5 .. 0.5
         const i0 = mod(base, total);
@@ -258,6 +271,7 @@ const Banner = () => {
     <section
       className="relative h-[100svh] min-h-[100svh] w-full overflow-hidden bg-neutral-950 text-white"
       data-testid="banner-section"
+      onMouseMove={handleMouseMove}
     >
       {/* Animated colour tint that matches the on-screen photo */}
       <div
@@ -302,9 +316,10 @@ const Banner = () => {
         </div>
       )}
 
-      {/* Logo (top-left) with rotating circular YNNCK text */}
+      {/* Logo (top-left) with oval YNNCK text; floats with the mouse */}
       <div
-        className="absolute left-5 top-5 z-40 h-[150px] w-[150px] sm:left-8 sm:top-8 sm:h-[170px] sm:w-[170px]"
+        ref={logoWrapRef}
+        className="absolute left-5 top-5 z-40 h-[150px] w-[150px] transition-transform duration-300 ease-out sm:left-8 sm:top-8 sm:h-[170px] sm:w-[170px]"
         data-testid="logo-wrapper"
       >
         <div className="absolute inset-0 flex items-center justify-center">

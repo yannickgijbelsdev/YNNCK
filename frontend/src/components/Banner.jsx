@@ -120,19 +120,19 @@ const Panel = React.forwardRef(
           {/* Floating body text (no card) beside the tile, to its right */}
           {(hasBody || excerpt) && (
             <div
-              className="pointer-events-none absolute left-full top-1/2 z-10 ml-6 w-56 -translate-y-1/2 opacity-0 transition-opacity duration-500 group-hover:opacity-100 sm:w-72"
+              className="pointer-events-none absolute left-full top-1/2 z-10 ml-6 w-60 -translate-y-1/2 opacity-0 transition-opacity duration-500 group-hover:opacity-100 sm:w-96"
               data-testid="panel-excerpt-wrap"
             >
               <div className="floaty-slow text-white drop-shadow-[0_2px_12px_rgba(0,0,0,0.95)]">
                 {hasBody ? (
                   <div
-                    className="panel-body max-h-[60vh] overflow-hidden text-sm leading-relaxed sm:text-base"
+                    className="panel-body fade-bottom max-h-[56vh] overflow-hidden text-[11px] leading-snug sm:text-xs"
                     data-testid="panel-excerpt"
                     dangerouslySetInnerHTML={{ __html: html }}
                   />
                 ) : (
                   <p
-                    className="max-h-[60vh] overflow-hidden text-sm leading-relaxed sm:text-base"
+                    className="fade-bottom max-h-[56vh] overflow-hidden text-[11px] leading-snug sm:text-xs"
                     data-testid="panel-excerpt"
                   >
                     {excerpt}

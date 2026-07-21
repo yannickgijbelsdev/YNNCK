@@ -178,7 +178,7 @@ const Banner = () => {
     let mounted = true;
     (async () => {
       try {
-        const { data } = await axios.get(`${API}/news`);
+        const { data } = await axios.get(`${API}/news`, { timeout: 15000 });
         const items = (data.items || [])
           .filter((it) => it.image)
           .map((it) => ({

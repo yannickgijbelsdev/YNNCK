@@ -283,23 +283,32 @@ const Banner = () => {
         if (colorRef.current)
           colorRef.current.style.backgroundColor = `rgba(${r}, ${g}, ${b}, 0.6)`;
 
-        // Circular sweep: panels arc off the page and flow back in, flat and
-        // front in the centre, curving out to the sides above and below.
+        // Panel motion. Desktop: wide circular sweep (arc off the sides).
+        // Mobile (narrow): clean vertical carousel with a gentle tilt so the
+        // tiles stay on-screen and the auto-scroll is clearly visible.
         const crect = container.getBoundingClientRect();
         const cCenter = crect.top + crect.height / 2;
         const R = crect.height;
+        const isMobile = window.innerWidth < 768;
         for (const el of panelRefs.current) {
           if (!el) continue;
           const pr = el.getBoundingClientRect();
           const pc = pr.top + pr.height / 2;
           const d = (pc - cCenter) / crect.height;
-          const theta = Math.max(-1.4, Math.min(1.4, d * 1.15));
-          const x = Math.sin(theta) * R * 1.5;
-          const z = (Math.cos(theta) - 1) * R * 0.65;
-          const rotY = -theta * (180 / Math.PI) * 0.7;
-          const scale = Math.max(0.4, Math.cos(theta));
-          el.style.transform = `perspective(1500px) translate3d(${x}px, 0px, ${z}px) rotateY(${rotY}deg) scale(${scale})`;
-          el.style.opacity = `${Math.max(0, 1 - Math.abs(d) * 0.85)}`;
+          if (isMobile) {
+            const angle = Math.max(-42, Math.min(42, -d * 38));
+            const scale = Math.max(0.66, 1 - Math.abs(d) * 0.22);
+            el.style.transform = `perspective(1100px) rotateX(${angle}deg) scale(${scale})`;
+            el.style.opacity = `${Math.max(0.2, 1 - Math.abs(d) * 0.8)}`;
+          } else {
+            const theta = Math.max(-1.4, Math.min(1.4, d * 1.15));
+            const x = Math.sin(theta) * R * 1.5;
+            const z = (Math.cos(theta) - 1) * R * 0.65;
+            const rotY = -theta * (180 / Math.PI) * 0.7;
+            const scale = Math.max(0.4, Math.cos(theta));
+            el.style.transform = `perspective(1500px) translate3d(${x}px, 0px, ${z}px) rotateY(${rotY}deg) scale(${scale})`;
+            el.style.opacity = `${Math.max(0, 1 - Math.abs(d) * 0.85)}`;
+          }
         }
       }
       raf = requestAnimationFrame(loop);

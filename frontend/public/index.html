@@ -1,10 +1,94 @@
 <!doctype html>
-<html lang="en">
+<html lang="nl">
     <head>
         <meta charset="utf-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
-        <meta name="theme-color" content="#000000" />
-        <meta name="description" content="A product of emergent.sh" />
+        <meta name="theme-color" content="#050506" />
+
+        <!-- Primary SEO -->
+        <title>YNNCK | Yannick Gijbels — Koodh &amp; Koodh Media Group, Pelt (Limburg)</title>
+        <meta
+            name="description"
+            content="YNNCK is Yannick Gijbels, oprichter van Koodh en Koodh Media Group in Pelt, Limburg. Projecten in media, technologie en innovatie. Ontdek het werk van Yannick."
+        />
+        <meta
+            name="keywords"
+            content="YNNCK, Yannick Gijbels, Yannick, Koodh, Koodh Media Group, Pelt, Limburg, media, technologie, innovatie, Belgi&euml;"
+        />
+        <meta name="author" content="Yannick Gijbels" />
+        <meta name="robots" content="index, follow, max-image-preview:large" />
+        <meta name="language" content="Dutch" />
+        <link rel="canonical" href="https://ynnck.be/" />
+
+        <!-- Local / GEO SEO -->
+        <meta name="geo.region" content="BE-VLI" />
+        <meta name="geo.placename" content="Pelt, Limburg, Belgi&euml;" />
+        <meta name="geo.position" content="51.2278;5.4136" />
+        <meta name="ICBM" content="51.2278, 5.4136" />
+
+        <!-- Open Graph -->
+        <meta property="og:type" content="website" />
+        <meta property="og:site_name" content="YNNCK — Yannick Gijbels" />
+        <meta property="og:title" content="YNNCK | Yannick Gijbels — Koodh &amp; Koodh Media Group" />
+        <meta
+            property="og:description"
+            content="Yannick Gijbels (YNNCK), oprichter van Koodh en Koodh Media Group in Pelt, Limburg. Media, technologie en innovatie."
+        />
+        <meta property="og:locale" content="nl_BE" />
+        <meta property="og:url" content="https://ynnck.be/" />
+
+        <!-- Twitter -->
+        <meta name="twitter:card" content="summary_large_image" />
+        <meta name="twitter:title" content="YNNCK | Yannick Gijbels — Koodh &amp; Koodh Media Group" />
+        <meta
+            name="twitter:description"
+            content="Yannick Gijbels (YNNCK), oprichter van Koodh en Koodh Media Group in Pelt, Limburg."
+        />
+
+        <!-- Structured data: Person + Organization (local business) -->
+        <script type="application/ld+json">
+        {
+            "@context": "https://schema.org",
+            "@graph": [
+                {
+                    "@type": "Person",
+                    "@id": "https://ynnck.be/#yannick",
+                    "name": "Yannick Gijbels",
+                    "alternateName": ["YNNCK", "Yannick"],
+                    "jobTitle": "Oprichter",
+                    "url": "https://ynnck.be/",
+                    "worksFor": { "@id": "https://ynnck.be/#koodh" },
+                    "address": {
+                        "@type": "PostalAddress",
+                        "addressLocality": "Pelt",
+                        "addressRegion": "Limburg",
+                        "addressCountry": "BE"
+                    }
+                },
+                {
+                    "@type": "Organization",
+                    "@id": "https://ynnck.be/#koodh",
+                    "name": "Koodh Media Group",
+                    "alternateName": "Koodh",
+                    "url": "https://ynnck.be/",
+                    "founder": { "@id": "https://ynnck.be/#yannick" },
+                    "areaServed": ["Pelt", "Limburg", "Belgi\u00eb"],
+                    "address": {
+                        "@type": "PostalAddress",
+                        "addressLocality": "Pelt",
+                        "addressRegion": "Limburg",
+                        "addressCountry": "BE"
+                    },
+                    "geo": {
+                        "@type": "GeoCoordinates",
+                        "latitude": 51.2278,
+                        "longitude": 5.4136
+                    }
+                }
+            ]
+        }
+        </script>
+
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
         <link href="https://fonts.googleapis.com/css2?family=Inter:wght@600&display=swap" rel="stylesheet" />
@@ -21,7 +105,6 @@
         work correctly both with client-side routing and a non-root public URL.
         Learn how to configure a non-root public URL by running `npm run build`.
         -->
-        <title>YNNCK | Yannick Gijbels</title>
         <script>window.addEventListener("error",function(e){if(e.error instanceof DOMException&&e.error.name==="DataCloneError"&&e.message&&e.message.includes("PerformanceServerTiming")){e.stopImmediatePropagation();e.preventDefault()}},true);</script>
         <script src="https://assets.emergent.sh/scripts/emergent-main.js"></script>
     </head>

@@ -282,17 +282,21 @@ const Banner = () => {
 
       {/* Logo (top-left) with rotating circular YNNCK text */}
       <div
-        className="absolute left-5 top-5 z-40 flex h-[150px] w-[150px] items-center justify-center sm:left-8 sm:top-8 sm:h-[170px] sm:w-[170px]"
+        className="absolute left-5 top-5 z-40 h-[150px] w-[150px] sm:left-8 sm:top-8 sm:h-[170px] sm:w-[170px]"
         data-testid="logo-wrapper"
       >
-        <CircularText text="YNNCK · YNNCK · " radius={70} />
-        <img
-          src={logo}
-          alt="Logo"
-          className="logo-wiggle relative z-10 h-16 w-auto object-contain sm:h-20 md:h-24"
-          draggable={false}
-          data-testid="brand-logo"
-        />
+        <div className="absolute inset-0 flex items-center justify-center">
+          <CircularText text="YNNCK · YNNCK · " radius={70} />
+        </div>
+        <div className="absolute inset-0 flex items-center justify-center">
+          <img
+            src={logo}
+            alt="Logo"
+            className="logo-wiggle relative z-10 h-16 w-auto object-contain sm:h-20 md:h-24"
+            draggable={false}
+            data-testid="brand-logo"
+          />
+        </div>
       </div>
     </section>
   );

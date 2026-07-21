@@ -1,6 +1,7 @@
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import axios from "axios";
 import logo from "../assets/logo_original_cropped.png";
+import glassesCursor from "../assets/glasses_cursor.png";
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 const API = `${BACKEND_URL}/api`;
@@ -126,13 +127,13 @@ const Panel = React.forwardRef(
               <div className="floaty-slow text-white drop-shadow-[0_2px_12px_rgba(0,0,0,0.95)]">
                 {hasBody ? (
                   <div
-                    className="panel-body fade-bottom max-h-[56vh] overflow-hidden text-[11px] leading-snug sm:text-xs"
+                    className="panel-body text-sm leading-relaxed sm:text-base"
                     data-testid="panel-excerpt"
                     dangerouslySetInnerHTML={{ __html: html }}
                   />
                 ) : (
                   <p
-                    className="fade-bottom max-h-[56vh] overflow-hidden text-[11px] leading-snug sm:text-xs"
+                    className="text-sm leading-relaxed sm:text-base"
                     data-testid="panel-excerpt"
                   >
                     {excerpt}
@@ -311,6 +312,7 @@ const Banner = () => {
       className="relative h-[100svh] min-h-[100svh] w-full overflow-hidden bg-neutral-950 text-white"
       data-testid="banner-section"
       onMouseMove={handleMouseMove}
+      style={{ cursor: `url(${glassesCursor}) 32 8, auto` }}
     >
       {/* Animated colour tint that matches the on-screen photo */}
       <div

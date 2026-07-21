@@ -1,0 +1,33 @@
+{
+  "summary": "Verified BUG 1 (auto-scroll) and BUG 2 (KOODH body HTML on hover) are FIXED. Backend: 5/5 pytest tests pass — /api/news returns 3 items (RADIOGROEP, 127, KOODH) each with id/image/color/title/excerpt; /api/news/articles/{KOODH_ID} returns body_html '<p>Test</p>'. Frontend: on load with no tile hover, [data-testid=carousel-scroll] scrollTop advances (~106px in 3s -> auto-scroll active). Programmatically centring the middle KOODH tile then hovering triggers GET /api/news/articles/dcb6fd81..., the group :hover fires (isHover=true), the excerpt wrap opacity transitions to 1, and [data-testid=panel-excerpt] contains innerHTML '<p>Test</p>' with text 'Test'. Manual wheel scroll works (delta=507 on wheel) and auto-scroll resumes >2.2s after last interact. No console/page errors observed.",
+  "backend_issues": {
+    "critical": [],
+    "minor": []
+  },
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": []
+  },
+  "test_report_links": [
+    "/app/backend/tests/backend_test.py",
+    "/app/test_reports/pytest/pytest_results.xml"
+  ],
+  "action_items": [],
+  "critical_code_review_comments": [
+    "Banner.jsx: the panel wrapper (top-level div with data-testid=carousel-panel) is h-[58svh] and the pitch used in the rAF loop is container.clientHeight * 0.58 — this depends on clientHeight equalling 100svh; if the browser interprets svh differently from clientHeight (mobile URL bars) the pitch and colour-index math can drift by a fraction of a panel. Consider computing pitch from an actual panel element's height rather than a hard-coded fraction.",
+    "Banner.jsx (line 337-339): onWheel/onTouchStart/onTouchMove call noteInteract, but there is no listener for keyboard interaction (PageDown/ArrowKeys) which would still scroll the container without pausing auto-scroll for those 2.2s — minor edge case.",
+    "Banner.jsx: fetchBody sets bodies[id]=null while loading; the Panel then evaluates hasBody = html.trim().length>0 where html = body||'' — if body===null it becomes '', so 'excerpt' fallback text is shown briefly during the fetch before switching to the fetched HTML. Cosmetic, not a bug.",
+    "server.py: get_article and get_news return {error: str(e)} with HTTP 200 on upstream failure — consider returning 502/503 so the frontend can distinguish empty upstream from genuine empty result."
+  ],
+  "updated_files": [
+    "/app/backend/tests/backend_test.py"
+  ],
+  "success_rate": {"backend": "100%", "frontend": "100%"},
+  "test_credentials": "N/A - no auth in this app",
+  "seed_data_creation": "None - external upstream API provides the 3 articles.",
+  "retest_needed": false,
+  "main_agent_can_self_test": true,
+  "context_for_next_testing_agent": "Programmatic hover approach works: (1) find KOODH panel index via querySelectorAll('[data-testid=carousel-panel]') and matching img.alt==='KOODH' (indices 2,5,8 in the 3x looped list). (2) Set container.scrollTop = target_i * (containerHeight*0.58) - (containerHeight - containerHeight*0.58)/2 to centre it. (3) Read the img rect and page.mouse.move to its centre to trigger onMouseEnter -> fetchBody -> group:hover -> opacity=1 -> [data-testid=panel-excerpt] shows innerHTML '<p>Test</p>'. Do NOT rely on waiting for the auto-scroll to bring KOODH to centre - it takes ~50s.",
+  "rca of the issue": "N/A - both bugs are fixed in current build."
+}

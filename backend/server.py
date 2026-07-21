@@ -186,13 +186,19 @@ async def get_article(article_id: str):
         logger.error(f"Failed to fetch article {article_id}: {e}")
         return {"id": article_id, "title": "", "body_text": "", "error": str(e)}
 
-    body_text = _strip_html(data.get("body") or "")
-    # Drop trivial image-credit-only bodies.
-    if body_text.startswith("©") and len(body_text) < 40:
-        body_text = ""
+    body_html_raw = data.get("body") or ""
+    # Strip the image-credit paragraph, keep the actual article body.
+    cleaned = re.sub(
+        r'<p[^>]*class="[^"]*clara-image-credit[^"]*"[^>]*>.*?</p>',
+        "",
+        body_html_raw,
+        flags=re.I | re.S,
+    ).strip()
+    body_text = _strip_html(cleaned)
     return {
         "id": article_id,
         "title": data.get("title", ""),
+        "body_html": cleaned,
         "body_text": body_text,
     }
 

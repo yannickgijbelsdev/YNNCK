@@ -80,8 +80,9 @@ const CircularText = ({ text, rx, ry }) => {
 };
 
 const Panel = React.forwardRef(
-  ({ id, image, title, excerpt, body, onHover }, ref) => {
-    const text = body || excerpt || "";
+  ({ id, image, title, excerpt, body, onEnter, onLeave }, ref) => {
+    const html = body || "";
+    const hasBody = html.trim().length > 0;
     return (
       <div
         className="flex h-[58svh] w-full flex-shrink-0 items-center justify-center p-6 sm:p-10"
@@ -91,7 +92,8 @@ const Panel = React.forwardRef(
           ref={ref}
           className="group relative will-change-transform"
           style={{ transformOrigin: "center center" }}
-          onMouseEnter={() => onHover && onHover(id)}
+          onMouseEnter={() => onEnter && onEnter(id)}
+          onMouseLeave={() => onLeave && onLeave()}
         >
           <img
             src={image}
@@ -115,19 +117,27 @@ const Panel = React.forwardRef(
             </div>
           )}
 
-          {/* Floating white rounded body card */}
-          {text && (
+          {/* Floating white rounded body card (rendered HTML) */}
+          {(hasBody || excerpt) && (
             <div
               className="floaty-slow pointer-events-none absolute -bottom-5 left-4 right-4 z-10 opacity-0 transition-opacity duration-500 group-hover:opacity-100 sm:left-6 sm:right-auto sm:max-w-md"
               data-testid="panel-excerpt-wrap"
             >
               <div className="rounded-2xl bg-white/95 p-5 text-neutral-800 shadow-2xl backdrop-blur-sm">
-                <p
-                  className="max-h-40 overflow-hidden text-sm leading-relaxed sm:text-base"
-                  data-testid="panel-excerpt"
-                >
-                  {text}
-                </p>
+                {hasBody ? (
+                  <div
+                    className="panel-body max-h-40 overflow-hidden text-sm leading-relaxed sm:text-base"
+                    data-testid="panel-excerpt"
+                    dangerouslySetInnerHTML={{ __html: html }}
+                  />
+                ) : (
+                  <p
+                    className="max-h-40 overflow-hidden text-sm leading-relaxed sm:text-base"
+                    data-testid="panel-excerpt"
+                  >
+                    {excerpt}
+                  </p>
+                )}
               </div>
             </div>
           )}
@@ -196,16 +206,25 @@ const Banner = () => {
     lastInteractRef.current = performance.now();
   };
 
-  // Lazily fetch an article's body text (from the detail API) on hover.
+  // Lazily fetch an article's body (HTML) from the detail API on hover.
   const fetchBody = (id) => {
     if (!id || bodies[id] !== undefined) return;
     setBodies((prev) => ({ ...prev, [id]: null })); // mark as loading
     axios
       .get(`${API}/news/articles/${id}`)
       .then(({ data }) =>
-        setBodies((prev) => ({ ...prev, [id]: data.body_text || "" }))
+        setBodies((prev) => ({ ...prev, [id]: data.body_html || "" }))
       )
       .catch(() => setBodies((prev) => ({ ...prev, [id]: "" })));
+  };
+
+  // Pause auto-scroll only while a tile itself is hovered (so it can be read).
+  const handlePanelEnter = (id) => {
+    hoverRef.current = true;
+    fetchBody(id);
+  };
+  const handlePanelLeave = () => {
+    hoverRef.current = false;
   };
 
   // Single rAF clock drives the vertical scroll, the matching background
@@ -315,8 +334,6 @@ const Banner = () => {
         <div
           ref={scrollRef}
           className="no-scrollbar absolute inset-0 z-20 overflow-y-scroll overscroll-contain"
-          onMouseEnter={() => (hoverRef.current = true)}
-          onMouseLeave={() => (hoverRef.current = false)}
           onWheel={noteInteract}
           onTouchStart={noteInteract}
           onTouchMove={noteInteract}
@@ -332,7 +349,8 @@ const Banner = () => {
                 title={a.title}
                 excerpt={a.excerpt}
                 body={bodies[a.id]}
-                onHover={fetchBody}
+                onEnter={handlePanelEnter}
+                onLeave={handlePanelLeave}
               />
             ))}
           </div>

@@ -176,6 +176,17 @@ body {
     animation: vineSway 5s ease-in-out infinite;
 }
 
+.panel-body p {
+    margin: 0 0 0.5rem;
+}
+.panel-body p:last-child {
+    margin-bottom: 0;
+}
+.panel-body a {
+    color: #b45309;
+    text-decoration: underline;
+}
+
 @keyframes popupIn {
     from {
         opacity: 0;

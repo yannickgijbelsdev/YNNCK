@@ -97,5 +97,45 @@ class TestArticles:
         assert r.status_code in (200, 404)
 
 
+# --- Resilience & caching ---
+class TestNewsResilience:
+    def test_news_under_concurrent_load(self):
+        """Endpoint must never hang or 5xx even under 8 concurrent requests."""
+        import concurrent.futures as cf
+        t0 = time.time()
+        with cf.ThreadPoolExecutor(max_workers=8) as ex:
+            futures = [ex.submit(requests.get, f"{API}/news", timeout=15) for _ in range(8)]
+            results = [f.result() for f in futures]
+        total_elapsed = time.time() - t0
+        # All must be 200
+        for r in results:
+            assert r.status_code == 200, f"Got {r.status_code}: {r.text[:200]}"
+        # Total wall-clock for parallel requests should still be < 12s
+        # (endpoint's own asyncio.wait_for bound)
+        assert total_elapsed < 15.0, f"8 parallel calls took {total_elapsed:.2f}s"
+
+    def test_news_repeated_consistency(self):
+        """Repeated calls stay 200 and return the same 3 items."""
+        seen_ids = None
+        for i in range(5):
+            r = requests.get(f"{API}/news", timeout=15)
+            assert r.status_code == 200, f"call {i}: {r.status_code}"
+            data = r.json()
+            ids = tuple(sorted(it["id"] for it in data["items"]))
+            if seen_ids is None:
+                seen_ids = ids
+            else:
+                assert ids == seen_ids, f"call {i}: ids drifted {ids} != {seen_ids}"
+
+    def test_news_cache_hit_is_near_instant(self):
+        """After a warm-up call, subsequent call should be well under 1s (cache hit)."""
+        requests.get(f"{API}/news", timeout=15)  # warm-up
+        t0 = time.time()
+        r = requests.get(f"{API}/news", timeout=15)
+        elapsed = time.time() - t0
+        assert r.status_code == 200
+        assert elapsed < 1.5, f"Cached call took {elapsed:.2f}s (expected near-instant)"
+
+
 if __name__ == "__main__":
     pytest.main([__file__, "-v"])

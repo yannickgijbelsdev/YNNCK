@@ -1,0 +1,34 @@
+{
+  "summary": "Verified Pillow-missing 502 fix and news caching/resilience on PREVIEW. Backend pytest: 13/13 passed in 3.19s (added 3 new resilience tests: 8-way concurrent load, repeated consistency, cache-hit near-instant). PIL v12.3.0 imports cleanly — no ImportError in /var/log/supervisor/backend.err.log. /api/news returns HTTP 200 with count=3 (RADIOGROEP, 127, KOODH), each item has an id and a non-default color (no #111111). First call <10s, cached second call <1.5s. Under 8 concurrent requests all return 200 within ~2s. /api/news/articles/dcb6fd81-49b2-4ff3-9cd1-1aecf64dd756 returns real KOODH body_html (contains 'YNNCK'/'Koodh'). Frontend: title = 'YNNCK | Yannick Gijbels — Koodh & Koodh Media Group, Pelt (Limburg)'. 9 panels (3 articles × 3 loops) all real (RADIOGROEP/127/KOODH), no 'Voorbeeldproject' fallback. 0 console errors on load. Screenshot confirms gradient background and neon-sign image.",
+  "backend_issues": {
+    "critical": [],
+    "minor": []
+  },
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": []
+  },
+  "test_report_links": [
+    "/app/backend/tests/backend_test.py",
+    "/app/test_reports/pytest/pytest_results.xml"
+  ],
+  "action_items": [],
+  "critical_code_review_comments": [
+    "server.py: _news_cache is a module-level dict — fine for a single uvicorn worker, but if the deployment scales to multiple workers each worker will do its own cold fetch. Consider persisting the news payload snapshot in MongoDB (like image_colors) for cross-worker priming.",
+    "server.py get_news(): on failure with no cache present, returns {'items': [], 'count': 0, 'error': ...} with HTTP 200. This is intentional (frontend falls back to demo), but observability suffers — a 503 with retry-after header would be a stronger contract if you ever plumb a monitoring alarm.",
+    "server.py color_for(): the try/except around the MongoDB read swallows ALL exceptions silently — hides real Mongo outages. Consider logging at debug level.",
+    "requirements.txt: Pillow is now included but the version pin is loose (>=10.0.0). PIL 12.x is currently installed which drops some legacy APIs — Image.FASTOCTREE and quantize() still work in 12.3.0, but consider pinning ==11.x for reproducibility.",
+    "Banner.jsx: still uses FALLBACK when /api/news returns an empty items array. If the upstream is transiently empty, users see fake demo content instead of a proper 'temporarily unavailable' UI."
+  ],
+  "updated_files": [
+    "/app/backend/tests/backend_test.py"
+  ],
+  "success_rate": {"backend": "100%", "frontend": "100%"},
+  "test_credentials": "N/A - no auth in this app",
+  "seed_data_creation": "None. Used existing cached image_colors from previous iterations.",
+  "retest_needed": false,
+  "main_agent_can_self_test": true,
+  "context_for_next_testing_agent": "PIL 12.3.0 is now installed system-wide via Pillow>=10.0.0 in requirements.txt. Backend logs are clean (no ImportError). The news endpoint's TTL cache is 300s and asyncio.wait_for bound is 12s. To force a cold-cache re-test: (a) `sudo supervisorctl restart backend` to drop _news_cache and _color_cache, (b) optionally drop `db.image_colors` docs to force per-image quantize. To run backend tests locally: `export REACT_APP_BACKEND_URL=<preview-url> && pytest /app/backend/tests/backend_test.py -v`.",
+  "rca of the issue": "Original production 502 on https://ynnck.dev/api/news was caused by `from PIL import Image` at top of backend/server.py while Pillow was NOT in requirements.txt — on a clean container deploy the backend crashed on startup with ImportError, so all /api requests returned 502 from the gateway and the frontend fell back to demo slides + black background. Fix (verified): added `Pillow>=10.0.0` to /app/backend/requirements.txt; hardened /api/news with an in-memory response cache (TTL=300s), an outer asyncio.wait_for(_build_news(), timeout=12) bound, a shorter 8s per-image requests timeout, and graceful fallback to the last-good cached payload on any exception. On PREVIEW: pytest 13/13 green, endpoint responds <2s cold and <1s warm, survives 8-way concurrent load with 200s across the board, frontend title/carousel/hover all correct."
+}

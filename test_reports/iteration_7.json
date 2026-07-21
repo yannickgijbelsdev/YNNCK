@@ -1,0 +1,35 @@
+{
+  "summary": "Frontend-only regression on Banner carousel focused on mobile auto-scroll pause/resume and manual scroll while a tile is active. All 5 targeted behaviours verified on both mobile (390x844) and desktop (1920x800). No console errors.",
+  "backend_issues": {"critical": [], "minor": []},
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": []
+  },
+  "test_results": {
+    "mobile_auto_scroll_pauses_while_active": "PASS - after tapping centred tile (idx 4), scrollTop delta over 3.2s = 0.00 (auto-scroll fully paused)",
+    "mobile_manual_scroll_works_while_paused": "PASS - manually set scrollTop 1829->2029; over next 3s delta from post-set = 0.00 (auto-scroll not fighting user; setting scrollTop is honoured)",
+    "mobile_auto_scroll_resumes_after_deselect": "PASS - after clicking same panel index to deselect, mobile-text hidden (0 visible), scrollTop then advanced 192.00 over 3.2s (>5 required)",
+    "mobile_tap_reveal_real_content": "PASS - titles observed only 'RADIOGROEP','127','KOODH' (3 real articles x3 copies = 9 panels); no 'Voorbeeldproject' FALLBACK. Active tile body starts with 'Vanuit de dagelijkse praktijk ontstond het idee voor 127.be:...' (real 127 content)",
+    "mobile_custom_cursor_hidden": "PASS - [data-testid=custom-cursor] computed display: 'none' on 390px viewport",
+    "desktop_auto_scroll_advances": "PASS - scrollTop 1468->1631 over 3.2s (delta 163.00)",
+    "desktop_hover_reveals_title_and_body": "PASS - after mouse.move onto centred .group, 1 panel-title-wrap and 1 panel-excerpt-wrap reach opacity>0.5",
+    "desktop_custom_cursor_visible": "PASS - display: 'block' on sm+ viewport",
+    "desktop_panel_mobile_text_hidden": "PASS - computed display: 'none' (sm:hidden)",
+    "no_console_errors": "PASS - 0 console errors on both viewports across the full test run"
+  },
+  "test_report_links": [],
+  "action_items": [],
+  "critical_code_review_comments": [
+    "Banner.jsx is 484 lines - approaching but under the 700-line split threshold; consider extracting Panel and CircularText into separate files for maintainability.",
+    "activeRef is manually synced inside the setActiveIdx updater callback - works, but two sources of truth (state + ref) can drift if a future edit updates one without the other; a useEffect syncing activeRef to activeIdx would be safer.",
+    "The rAF idle condition (line 315-318) also drives colour/tilt updates - when idle==false, those still update (good); confirmed by observation. No issue found, just noting the coupling.",
+    "-webkit-overflow-scrolling: touch is applied via camelCase (WebkitOverflowScrolling) - correct for React inline style. Verified manual scroll works on the emulated mobile viewport."
+  ],
+  "updated_files": [],
+  "success_rate": {"backend": "n/a (not tested this iteration)", "frontend": "100%"},
+  "seed_data_creation": "None",
+  "retest_needed": false,
+  "should_main_agent_self_test": false,
+  "context_for_next_testing_agent": "Banner Iteration 7: mobile pause-while-active + manual-scroll-freedom + resume-on-deselect verified via JS-driven .group clicks on the centred [data-testid=carousel-panel]. IMPORTANT for future tests: to deselect a tile you must click the SAME panel index (activeIdx toggles by index); if you recompute 'centred panel' after manual scroll you may click a different index and end up activating a NEW tile instead of deselecting. Also, wait >2200ms after any wheel/touch/manual scroll before measuring auto-scroll resume (lastInteractRef debounce)."
+}

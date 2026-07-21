@@ -189,11 +189,16 @@ const Banner = () => {
   const panelRefs = useRef([]);
   const logoWrapRef = useRef(null);
   const cursorRef = useRef(null);
+  const activeRef = useRef(null);
   const [activeIdx, setActiveIdx] = useState(null);
 
   const handlePanelSelect = (i) => {
     if (window.innerWidth >= 768) return; // desktop uses hover, not tap
-    setActiveIdx((prev) => (prev === i ? null : i));
+    setActiveIdx((prev) => {
+      const next = prev === i ? null : i;
+      activeRef.current = next;
+      return next;
+    });
   };
 
   const handleMouseMove = (e) => {
@@ -307,7 +312,10 @@ const Banner = () => {
           inited = true;
         }
 
-        const idle = !hoverRef.current && now - lastInteractRef.current > 2200;
+        const idle =
+          !hoverRef.current &&
+          activeRef.current === null &&
+          now - lastInteractRef.current > 2200;
         if (idle) container.scrollTop += (pitch / secPerPanel) * dt;
 
         // Keep scroll position inside the middle copy for a seamless loop.
@@ -400,6 +408,7 @@ const Banner = () => {
         <div
           ref={scrollRef}
           className="no-scrollbar absolute inset-0 z-20 overflow-y-scroll overscroll-contain"
+          style={{ WebkitOverflowScrolling: "touch" }}
           onWheel={noteInteract}
           onTouchStart={noteInteract}
           onTouchMove={noteInteract}

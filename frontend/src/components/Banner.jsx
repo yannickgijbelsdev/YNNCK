@@ -12,7 +12,8 @@ const FALLBACK = [
       "https://images.unsplash.com/photo-1504711434969-e33886168f5c?auto=format&fit=crop&w=1920&q=80",
     color: "#1b2a3a",
     title: "Voorbeeldproject",
-    excerpt: "Dit is een voorbeeldtekst die verschijnt zodra de nieuws-API geen projecten teruggeeft.",
+    excerpt:
+      "Dit is een voorbeeldtekst die verschijnt zodra de nieuws-API geen projecten teruggeeft.",
   },
   {
     image:
@@ -32,52 +33,92 @@ const hexToRgb = (hex) => {
   ];
 };
 
-const Panel = ({ image, title, excerpt }) => (
+// Rotating circular "YNNCK" text ring drawn around the logo.
+const CircularText = ({ text, radius }) => {
+  const chars = text.split("");
+  const step = 360 / chars.length;
+  return (
+    <div
+      className="circular-text pointer-events-none"
+      style={{ width: radius * 2, height: radius * 2 }}
+      data-testid="circular-text"
+      aria-hidden="true"
+    >
+      {chars.map((c, i) => (
+        <span
+          key={i}
+          style={{
+            transform: `translate(-50%, -50%) rotate(${i * step}deg) translateY(-${radius}px)`,
+          }}
+        >
+          {c}
+        </span>
+      ))}
+    </div>
+  );
+};
+
+const Panel = React.forwardRef(({ image, title, excerpt }, ref) => (
   <div
-    className="group relative flex h-screen w-full flex-shrink-0 items-center justify-center overflow-hidden p-6 sm:p-10"
+    className="flex h-[100svh] w-full flex-shrink-0 items-center justify-center p-6 sm:p-10"
     data-testid="carousel-panel"
   >
-    <div className="relative max-h-[82%] max-w-[88%]">
+    <div
+      ref={ref}
+      className="group relative will-change-transform"
+      style={{ transformOrigin: "center center" }}
+    >
       <img
         src={image}
         alt={title || ""}
-        className="max-h-[82vh] w-auto rounded-lg object-contain shadow-2xl"
+        className="max-h-[72vh] w-auto max-w-[90vw] rounded-xl object-contain shadow-2xl"
         draggable={false}
       />
-      {/* Article info revealed on hover */}
-      <div
-        className="pointer-events-none absolute inset-0 flex flex-col justify-end rounded-lg bg-gradient-to-t from-black/85 via-black/40 to-transparent p-6 opacity-0 transition-opacity duration-300 group-hover:opacity-100 sm:p-8"
-        data-testid="panel-overlay"
-      >
-        {title && (
+
+      {/* Floating title */}
+      {title && (
+        <div
+          className="floaty pointer-events-none absolute -top-6 left-2 z-10 opacity-0 transition-opacity duration-500 group-hover:opacity-100 sm:-top-8 sm:left-4"
+          data-testid="panel-title-wrap"
+        >
           <h2
-            className="brand-display text-2xl font-bold leading-tight text-white sm:text-3xl md:text-4xl"
+            className="brand-display text-3xl font-bold leading-none text-white drop-shadow-[0_6px_24px_rgba(0,0,0,0.85)] sm:text-5xl md:text-6xl"
             data-testid="panel-title"
           >
             {title}
           </h2>
-        )}
-        {excerpt && (
-          <p
-            className="mt-3 max-w-2xl text-sm leading-relaxed text-white/85 sm:text-base"
-            data-testid="panel-excerpt"
-          >
-            {excerpt}
-          </p>
-        )}
-      </div>
+        </div>
+      )}
+
+      {/* Floating white rounded body card */}
+      {excerpt && (
+        <div
+          className="floaty-slow pointer-events-none absolute -bottom-5 left-4 right-4 z-10 opacity-0 transition-opacity duration-500 group-hover:opacity-100 sm:left-6 sm:right-auto sm:max-w-md"
+          data-testid="panel-excerpt-wrap"
+        >
+          <div className="rounded-2xl bg-white/95 p-5 text-neutral-800 shadow-2xl backdrop-blur-sm">
+            <p
+              className="text-sm leading-relaxed sm:text-base"
+              data-testid="panel-excerpt"
+            >
+              {excerpt}
+            </p>
+          </div>
+        </div>
+      )}
     </div>
   </div>
-);
+));
 
 const Banner = () => {
   const [articles, setArticles] = useState([]);
   const [loading, setLoading] = useState(true);
 
-  const sectionRef = useRef(null);
-  const trackRef = useRef(null);
+  const scrollRef = useRef(null);
   const colorRef = useRef(null);
   const hoverRef = useRef(false);
+  const lastInteractRef = useRef(0);
+  const panelRefs = useRef([]);
 
   // Fetch projects for the carousel
   useEffect(() => {
@@ -108,50 +149,84 @@ const Banner = () => {
 
   const total = articles.length;
 
-  // Duplicate the panels so the horizontal loop is seamless.
-  const loopItems = useMemo(() => [...articles, ...articles], [articles]);
+  // Three copies so the vertical loop is seamless in both directions.
+  const loopItems = useMemo(
+    () => [...articles, ...articles, ...articles],
+    [articles]
+  );
 
-  // Slower, calm pace: seconds to move through one full set of panels.
-  const duration = Math.max(total * 16, 34);
+  const noteInteract = () => {
+    lastInteractRef.current = performance.now();
+  };
 
-  // Single rAF clock drives BOTH the horizontal scroll and the background
-  // colour, so the gradient always matches the photo currently on screen
-  // and blends smoothly between projects.
+  // Single rAF clock drives the vertical scroll, the matching background
+  // colour AND the circular 3D tilt of each panel.
   useEffect(() => {
     if (total === 0) return undefined;
     const rgbs = articles.map((a) => hexToRgb(a.color));
+    const container = scrollRef.current;
     let raf;
     let last = performance.now();
-    let elapsed = 0;
+    let inited = false;
+    const secPerPanel = 8;
 
-    const tick = (now) => {
-      const dt = (now - last) / 1000;
+    const mod = (n, m) => ((n % m) + m) % m;
+
+    const loop = (now) => {
+      const dt = Math.min((now - last) / 1000, 0.05);
       last = now;
-      if (!hoverRef.current) elapsed += dt;
 
-      const f = (elapsed % duration) / duration; // 0 -> 1
-      const t = total * f; // panels scrolled (0 -> total)
-      const i0 = Math.floor(t) % total;
-      const i1 = (i0 + 1) % total;
-      const frac = t - Math.floor(t);
+      if (container) {
+        const vh = container.clientHeight || 1;
+        const setH = total * vh;
 
-      const [r0, g0, b0] = rgbs[i0] || [17, 17, 17];
-      const [r1, g1, b1] = rgbs[i1] || rgbs[i0] || [17, 17, 17];
-      const r = Math.round(r0 + (r1 - r0) * frac);
-      const g = Math.round(g0 + (g1 - g0) * frac);
-      const b = Math.round(b0 + (b1 - b0) * frac);
+        if (!inited && setH > 0) {
+          container.scrollTop = setH; // start in the middle copy
+          inited = true;
+        }
 
-      if (trackRef.current) {
-        trackRef.current.style.transform = `translateY(-${f * 50}%)`;
+        const idle = !hoverRef.current && now - lastInteractRef.current > 2200;
+        if (idle) container.scrollTop += (vh / secPerPanel) * dt;
+
+        // Keep scroll position inside the middle copy for a seamless loop.
+        if (container.scrollTop >= 2 * setH) container.scrollTop -= setH;
+        else if (container.scrollTop < setH) container.scrollTop += setH;
+
+        // Background colour from the panel nearest the centre.
+        const x = container.scrollTop / vh;
+        const base = Math.round(x);
+        const off = x - base; // -0.5 .. 0.5
+        const i0 = mod(base, total);
+        const i1 = mod(off >= 0 ? base + 1 : base - 1, total);
+        const t = Math.abs(off);
+        const [r0, g0, b0] = rgbs[i0];
+        const [r1, g1, b1] = rgbs[i1];
+        const r = Math.round(r0 + (r1 - r0) * t);
+        const g = Math.round(g0 + (g1 - g0) * t);
+        const b = Math.round(b0 + (b1 - b0) * t);
+        if (colorRef.current)
+          colorRef.current.style.backgroundColor = `rgba(${r}, ${g}, ${b}, 0.6)`;
+
+        // Circular 3D tilt: flat in the centre, tilting away above and below.
+        const crect = container.getBoundingClientRect();
+        const cCenter = crect.top + crect.height / 2;
+        for (const el of panelRefs.current) {
+          if (!el) continue;
+          const pr = el.getBoundingClientRect();
+          const pc = pr.top + pr.height / 2;
+          const d = (pc - cCenter) / crect.height;
+          const angle = Math.max(-72, Math.min(72, -d * 62));
+          const scale = 1 - Math.min(Math.abs(d) * 0.28, 0.5);
+          el.style.transform = `perspective(1200px) rotateX(${angle}deg) scale(${scale})`;
+          el.style.opacity = `${1 - Math.min(Math.abs(d) * 0.7, 0.82)}`;
+        }
       }
-      if (colorRef.current) {
-        colorRef.current.style.backgroundColor = `rgba(${r}, ${g}, ${b}, 0.6)`;
-      }
-      raf = requestAnimationFrame(tick);
+      raf = requestAnimationFrame(loop);
     };
-    raf = requestAnimationFrame(tick);
+    raf = requestAnimationFrame(loop);
     return () => cancelAnimationFrame(raf);
-  }, [articles, total, duration]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [articles, total]);
 
   if (loading) {
     return <section className="h-[100svh] w-full bg-neutral-950" />;
@@ -159,20 +234,19 @@ const Banner = () => {
 
   return (
     <section
-      ref={sectionRef}
       className="relative h-[100svh] min-h-[100svh] w-full overflow-hidden bg-neutral-950 text-white"
       data-testid="banner-section"
     >
       {/* Animated colour tint that matches the on-screen photo */}
       <div
         ref={colorRef}
-        className="pointer-events-none absolute inset-0 z-10"
+        className="pointer-events-none absolute inset-0 z-0"
         aria-hidden="true"
       />
 
       {/* Depth overlay so the colour reads as a soft gradient */}
       <div
-        className="pointer-events-none absolute inset-0 z-[11]"
+        className="pointer-events-none absolute inset-0 z-[1]"
         style={{
           background:
             "radial-gradient(120% 90% at 50% 25%, rgba(255,255,255,0.06) 0%, transparent 45%), linear-gradient(to bottom, rgba(0,0,0,0.25) 0%, rgba(0,0,0,0.12) 40%, rgba(0,0,0,0.6) 100%)",
@@ -180,32 +254,42 @@ const Banner = () => {
         aria-hidden="true"
       />
 
-      {/* Vertical auto-scrolling carousel */}
+      {/* Vertical, manually-scrollable carousel with 3D circular motion */}
       {total > 0 && (
         <div
-          ref={trackRef}
-          className="absolute left-0 top-0 z-20 flex h-max w-full flex-col"
+          ref={scrollRef}
+          className="no-scrollbar absolute inset-0 z-20 overflow-y-scroll overscroll-contain"
           onMouseEnter={() => (hoverRef.current = true)}
           onMouseLeave={() => (hoverRef.current = false)}
-          data-testid="carousel-track"
+          onWheel={noteInteract}
+          onTouchStart={noteInteract}
+          onTouchMove={noteInteract}
+          data-testid="carousel-scroll"
         >
-          {loopItems.map((a, i) => (
-            <Panel
-              key={`${a.image}-${i}`}
-              image={a.image}
-              title={a.title}
-              excerpt={a.excerpt}
-            />
-          ))}
+          <div className="flex w-full flex-col" data-testid="carousel-track">
+            {loopItems.map((a, i) => (
+              <Panel
+                key={`${a.image}-${i}`}
+                ref={(el) => (panelRefs.current[i] = el)}
+                image={a.image}
+                title={a.title}
+                excerpt={a.excerpt}
+              />
+            ))}
+          </div>
         </div>
       )}
 
-      {/* Logo (top-left) */}
-      <div className="absolute left-5 top-5 z-40 sm:left-8 sm:top-8" data-testid="logo-wrapper">
+      {/* Logo (top-left) with rotating circular YNNCK text */}
+      <div
+        className="absolute left-5 top-5 z-40 flex h-[150px] w-[150px] items-center justify-center sm:left-8 sm:top-8 sm:h-[170px] sm:w-[170px]"
+        data-testid="logo-wrapper"
+      >
+        <CircularText text="YNNCK · YNNCK · " radius={70} />
         <img
           src={logo}
           alt="Logo"
-          className="logo-wiggle h-16 w-auto object-contain sm:h-20 md:h-24"
+          className="logo-wiggle relative z-10 h-16 w-auto object-contain sm:h-20 md:h-24"
           draggable={false}
           data-testid="brand-logo"
         />

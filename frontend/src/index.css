@@ -76,6 +76,51 @@ body {
     animation: logoWiggle 5s ease-in-out infinite;
 }
 
+/* Hide scrollbar on the carousel scroll container */
+.no-scrollbar::-webkit-scrollbar {
+    display: none;
+}
+.no-scrollbar {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+}
+
+/* Gentle floating motion for the hover title / body card */
+@keyframes floaty {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-9px); }
+}
+.floaty {
+    animation: floaty 4s ease-in-out infinite;
+}
+@keyframes floatySlow {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(7px); }
+}
+.floaty-slow {
+    animation: floatySlow 5.5s ease-in-out infinite;
+}
+
+/* Circular rotating text around the logo */
+@keyframes spinSlow {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+}
+.circular-text {
+    position: relative;
+    animation: spinSlow 16s linear infinite;
+}
+.circular-text span {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 0.15em;
+    color: rgba(255, 255, 255, 0.9);
+    text-transform: uppercase;
+}
+
 /* Plant decorations: gentle, organic shaking as if lightly rattled */
 @keyframes plantShakeA {
     0%, 100% {

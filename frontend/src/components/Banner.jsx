@@ -11,11 +11,15 @@ const FALLBACK = [
     image:
       "https://images.unsplash.com/photo-1504711434969-e33886168f5c?auto=format&fit=crop&w=1920&q=80",
     color: "#1b2a3a",
+    title: "Voorbeeldproject",
+    excerpt: "Dit is een voorbeeldtekst die verschijnt zodra de nieuws-API geen projecten teruggeeft.",
   },
   {
     image:
       "https://images.unsplash.com/photo-1495020689067-958852a7765e?auto=format&fit=crop&w=1920&q=80",
     color: "#3a2a1b",
+    title: "Tweede project",
+    excerpt: "Nog een voorbeeldbeschrijving om de hover-weergave te demonstreren.",
   },
 ];
 
@@ -28,17 +32,41 @@ const hexToRgb = (hex) => {
   ];
 };
 
-const Panel = ({ image }) => (
+const Panel = ({ image, title, excerpt }) => (
   <div
-    className="relative flex h-full w-screen flex-shrink-0 items-center justify-center overflow-hidden p-6 sm:p-10"
+    className="group relative flex h-screen w-full flex-shrink-0 items-center justify-center overflow-hidden p-6 sm:p-10"
     data-testid="carousel-panel"
   >
-    <img
-      src={image}
-      alt=""
-      className="max-h-[82%] max-w-[88%] rounded-lg object-contain shadow-2xl"
-      draggable={false}
-    />
+    <div className="relative max-h-[82%] max-w-[88%]">
+      <img
+        src={image}
+        alt={title || ""}
+        className="max-h-[82vh] w-auto rounded-lg object-contain shadow-2xl"
+        draggable={false}
+      />
+      {/* Article info revealed on hover */}
+      <div
+        className="pointer-events-none absolute inset-0 flex flex-col justify-end rounded-lg bg-gradient-to-t from-black/85 via-black/40 to-transparent p-6 opacity-0 transition-opacity duration-300 group-hover:opacity-100 sm:p-8"
+        data-testid="panel-overlay"
+      >
+        {title && (
+          <h2
+            className="brand-display text-2xl font-bold leading-tight text-white sm:text-3xl md:text-4xl"
+            data-testid="panel-title"
+          >
+            {title}
+          </h2>
+        )}
+        {excerpt && (
+          <p
+            className="mt-3 max-w-2xl text-sm leading-relaxed text-white/85 sm:text-base"
+            data-testid="panel-excerpt"
+          >
+            {excerpt}
+          </p>
+        )}
+      </div>
+    </div>
   </div>
 );
 
@@ -59,7 +87,12 @@ const Banner = () => {
         const { data } = await axios.get(`${API}/news`);
         const items = (data.items || [])
           .filter((it) => it.image)
-          .map((it) => ({ image: it.image, color: it.color || "#111111" }));
+          .map((it) => ({
+            image: it.image,
+            color: it.color || "#111111",
+            title: it.title || "",
+            excerpt: it.excerpt || "",
+          }));
         if (!mounted) return;
         setArticles(items.length > 0 ? items : FALLBACK);
       } catch (e) {
@@ -109,7 +142,7 @@ const Banner = () => {
       const b = Math.round(b0 + (b1 - b0) * frac);
 
       if (trackRef.current) {
-        trackRef.current.style.transform = `translateX(-${f * 50}%)`;
+        trackRef.current.style.transform = `translateY(-${f * 50}%)`;
       }
       if (colorRef.current) {
         colorRef.current.style.backgroundColor = `rgba(${r}, ${g}, ${b}, 0.6)`;
@@ -147,17 +180,22 @@ const Banner = () => {
         aria-hidden="true"
       />
 
-      {/* Horizontal auto-scrolling carousel */}
+      {/* Vertical auto-scrolling carousel */}
       {total > 0 && (
         <div
           ref={trackRef}
-          className="absolute left-0 top-0 z-20 flex h-full w-max"
+          className="absolute left-0 top-0 z-20 flex h-max w-full flex-col"
           onMouseEnter={() => (hoverRef.current = true)}
           onMouseLeave={() => (hoverRef.current = false)}
           data-testid="carousel-track"
         >
           {loopItems.map((a, i) => (
-            <Panel key={`${a.image}-${i}`} image={a.image} />
+            <Panel
+              key={`${a.image}-${i}`}
+              image={a.image}
+              title={a.title}
+              excerpt={a.excerpt}
+            />
           ))}
         </div>
       )}

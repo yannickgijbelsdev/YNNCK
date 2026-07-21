@@ -121,6 +121,7 @@ def _find_image(obj):
 
 def _normalize_item(it):
     title = _pick(it, ["title", "name", "headline", "heading", "subject"]) or ""
+    excerpt = _pick(it, ["excerpt", "summary", "description", "intro", "body", "content"]) or ""
     image = _pick(
         it,
         ["feature_image", "featured_image", "feature_image_url", "image", "image_url",
@@ -128,7 +129,7 @@ def _normalize_item(it):
     )
     if not image:
         image = _find_image(it)
-    return {"title": title, "image": image or "", "raw": it}
+    return {"title": title, "excerpt": excerpt, "image": image or "", "raw": it}
 
 
 @api_router.get("/news")

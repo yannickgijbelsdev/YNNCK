@@ -3,6 +3,7 @@ from dotenv import load_dotenv
 from starlette.middleware.cors import CORSMiddleware
 from motor.motor_asyncio import AsyncIOMotorClient
 import os
+import re
 import logging
 from pathlib import Path
 from pydantic import BaseModel, Field, ConfigDict
@@ -49,6 +50,19 @@ async def root():
 
 NEWS_API_URL = "http://clr.koodh.com/api/news/ynnck/homepagina?limit=50"
 POPUP_LOGO_API_URL = "http://clr.koodh.com/api/news/ynnck/popup-logo?limit=20"
+ARTICLE_API_URL = "https://clr.koodh.com/api/news/articles/{}"
+
+
+def _strip_html(html):
+    """Turn body HTML into readable plain text."""
+    if not html:
+        return ""
+    text = re.sub(r"<(script|style)[^>]*>.*?</\1>", " ", html, flags=re.I | re.S)
+    text = re.sub(r"<[^>]+>", " ", text)
+    text = text.replace("&nbsp;", " ").replace("&amp;", "&")
+    text = text.replace("&quot;", '"').replace("&#39;", "'")
+    text = re.sub(r"\s+", " ", text).strip()
+    return text
 
 # Cache dominant colours per image URL so we only download/analyse once.
 _color_cache = {}
@@ -120,8 +134,9 @@ def _find_image(obj):
 
 
 def _normalize_item(it):
+    item_id = _pick(it, ["id", "uuid", "_id"]) or ""
     title = _pick(it, ["title", "name", "headline", "heading", "subject"]) or ""
-    excerpt = _pick(it, ["excerpt", "summary", "description", "intro", "body", "content"]) or ""
+    excerpt = _pick(it, ["excerpt", "summary", "description", "intro"]) or ""
     image = _pick(
         it,
         ["feature_image", "featured_image", "feature_image_url", "image", "image_url",
@@ -129,7 +144,7 @@ def _normalize_item(it):
     )
     if not image:
         image = _find_image(it)
-    return {"title": title, "excerpt": excerpt, "image": image or "", "raw": it}
+    return {"id": item_id, "title": title, "excerpt": excerpt, "image": image or "", "raw": it}
 
 
 @api_router.get("/news")
@@ -155,6 +170,31 @@ async def get_news():
 
     await asyncio.to_thread(add_colors)
     return {"items": items, "count": len(items)}
+
+
+@api_router.get("/news/articles/{article_id}")
+async def get_article(article_id: str):
+    """Proxy for a single article's detail, returning the body as plain text."""
+    def fetch():
+        r = requests.get(ARTICLE_API_URL.format(article_id), timeout=20, allow_redirects=True)
+        r.raise_for_status()
+        return r.json()
+
+    try:
+        data = await asyncio.to_thread(fetch)
+    except Exception as e:
+        logger.error(f"Failed to fetch article {article_id}: {e}")
+        return {"id": article_id, "title": "", "body_text": "", "error": str(e)}
+
+    body_text = _strip_html(data.get("body") or "")
+    # Drop trivial image-credit-only bodies.
+    if body_text.startswith("©") and len(body_text) < 40:
+        body_text = ""
+    return {
+        "id": article_id,
+        "title": data.get("title", ""),
+        "body_text": body_text,
+    }
 
 
 @api_router.get("/popup-logo")

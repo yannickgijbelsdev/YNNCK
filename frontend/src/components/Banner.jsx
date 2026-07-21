@@ -79,61 +79,68 @@ const CircularText = ({ text, rx, ry }) => {
   );
 };
 
-const Panel = React.forwardRef(({ image, title, excerpt }, ref) => (
-  <div
-    className="flex h-[58svh] w-full flex-shrink-0 items-center justify-center p-6 sm:p-10"
-    data-testid="carousel-panel"
-  >
-    <div
-      ref={ref}
-      className="group relative will-change-transform"
-      style={{ transformOrigin: "center center" }}
-    >
-      <img
-        src={image}
-        alt={title || ""}
-        className="max-h-[72vh] w-auto max-w-[90vw] rounded-xl object-contain shadow-2xl"
-        draggable={false}
-      />
-
-      {/* Floating title */}
-      {title && (
+const Panel = React.forwardRef(
+  ({ id, image, title, excerpt, body, onHover }, ref) => {
+    const text = body || excerpt || "";
+    return (
+      <div
+        className="flex h-[58svh] w-full flex-shrink-0 items-center justify-center p-6 sm:p-10"
+        data-testid="carousel-panel"
+      >
         <div
-          className="floaty pointer-events-none absolute -top-6 left-2 z-10 opacity-0 transition-opacity duration-500 group-hover:opacity-100 sm:-top-8 sm:left-4"
-          data-testid="panel-title-wrap"
+          ref={ref}
+          className="group relative will-change-transform"
+          style={{ transformOrigin: "center center" }}
+          onMouseEnter={() => onHover && onHover(id)}
         >
-          <h2
-            className="brand-display text-3xl font-bold leading-none text-white drop-shadow-[0_6px_24px_rgba(0,0,0,0.85)] sm:text-5xl md:text-6xl"
-            data-testid="panel-title"
-          >
-            {title}
-          </h2>
-        </div>
-      )}
+          <img
+            src={image}
+            alt={title || ""}
+            className="max-h-[72vh] w-auto max-w-[90vw] rounded-xl object-contain shadow-2xl"
+            draggable={false}
+          />
 
-      {/* Floating white rounded body card */}
-      {excerpt && (
-        <div
-          className="floaty-slow pointer-events-none absolute -bottom-5 left-4 right-4 z-10 opacity-0 transition-opacity duration-500 group-hover:opacity-100 sm:left-6 sm:right-auto sm:max-w-md"
-          data-testid="panel-excerpt-wrap"
-        >
-          <div className="rounded-2xl bg-white/95 p-5 text-neutral-800 shadow-2xl backdrop-blur-sm">
-            <p
-              className="text-sm leading-relaxed sm:text-base"
-              data-testid="panel-excerpt"
+          {/* Floating title */}
+          {title && (
+            <div
+              className="floaty pointer-events-none absolute -top-6 left-2 z-10 opacity-0 transition-opacity duration-500 group-hover:opacity-100 sm:-top-8 sm:left-4"
+              data-testid="panel-title-wrap"
             >
-              {excerpt}
-            </p>
-          </div>
+              <h2
+                className="brand-display text-3xl font-bold leading-none text-white drop-shadow-[0_6px_24px_rgba(0,0,0,0.85)] sm:text-5xl md:text-6xl"
+                data-testid="panel-title"
+              >
+                {title}
+              </h2>
+            </div>
+          )}
+
+          {/* Floating white rounded body card */}
+          {text && (
+            <div
+              className="floaty-slow pointer-events-none absolute -bottom-5 left-4 right-4 z-10 opacity-0 transition-opacity duration-500 group-hover:opacity-100 sm:left-6 sm:right-auto sm:max-w-md"
+              data-testid="panel-excerpt-wrap"
+            >
+              <div className="rounded-2xl bg-white/95 p-5 text-neutral-800 shadow-2xl backdrop-blur-sm">
+                <p
+                  className="max-h-40 overflow-hidden text-sm leading-relaxed sm:text-base"
+                  data-testid="panel-excerpt"
+                >
+                  {text}
+                </p>
+              </div>
+            </div>
+          )}
         </div>
-      )}
-    </div>
-  </div>
-));
+      </div>
+    );
+  }
+);
 
 const Banner = () => {
   const [articles, setArticles] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [bodies, setBodies] = useState({});
 
   const scrollRef = useRef(null);
   const colorRef = useRef(null);
@@ -158,6 +165,7 @@ const Banner = () => {
         const items = (data.items || [])
           .filter((it) => it.image)
           .map((it) => ({
+            id: it.id || "",
             image: it.image,
             color: it.color || "#111111",
             title: it.title || "",
@@ -188,6 +196,18 @@ const Banner = () => {
     lastInteractRef.current = performance.now();
   };
 
+  // Lazily fetch an article's body text (from the detail API) on hover.
+  const fetchBody = (id) => {
+    if (!id || bodies[id] !== undefined) return;
+    setBodies((prev) => ({ ...prev, [id]: null })); // mark as loading
+    axios
+      .get(`${API}/news/articles/${id}`)
+      .then(({ data }) =>
+        setBodies((prev) => ({ ...prev, [id]: data.body_text || "" }))
+      )
+      .catch(() => setBodies((prev) => ({ ...prev, [id]: "" })));
+  };
+
   // Single rAF clock drives the vertical scroll, the matching background
   // colour AND the circular 3D tilt of each panel.
   useEffect(() => {
@@ -197,7 +217,7 @@ const Banner = () => {
     let raf;
     let last = performance.now();
     let inited = false;
-    const secPerPanel = 8;
+    const secPerPanel = 16;
 
     const mod = (n, m) => ((n % m) + m) % m;
 
@@ -307,9 +327,12 @@ const Banner = () => {
               <Panel
                 key={`${a.image}-${i}`}
                 ref={(el) => (panelRefs.current[i] = el)}
+                id={a.id}
                 image={a.image}
                 title={a.title}
                 excerpt={a.excerpt}
+                body={bodies[a.id]}
+                onHover={fetchBody}
               />
             ))}
           </div>

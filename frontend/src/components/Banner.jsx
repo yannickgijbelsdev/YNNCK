@@ -102,10 +102,10 @@ const Panel = React.forwardRef(
             draggable={false}
           />
 
-          {/* Floating title */}
+          {/* Floating title (right side) */}
           {title && (
             <div
-              className="floaty pointer-events-none absolute -top-6 left-2 z-10 opacity-0 transition-opacity duration-500 group-hover:opacity-100 sm:-top-8 sm:left-4"
+              className="floaty pointer-events-none absolute -top-6 right-2 z-10 text-right opacity-0 transition-opacity duration-500 group-hover:opacity-100 sm:-top-8 sm:right-4"
               data-testid="panel-title-wrap"
             >
               <h2
@@ -117,10 +117,10 @@ const Panel = React.forwardRef(
             </div>
           )}
 
-          {/* Floating white rounded body card (rendered HTML) */}
+          {/* Floating white rounded body card (right side, rendered HTML) */}
           {(hasBody || excerpt) && (
             <div
-              className="floaty-slow pointer-events-none absolute -bottom-5 left-4 right-4 z-10 opacity-0 transition-opacity duration-500 group-hover:opacity-100 sm:left-6 sm:right-auto sm:max-w-md"
+              className="floaty-slow pointer-events-none absolute -bottom-5 left-4 right-4 z-10 opacity-0 transition-opacity duration-500 group-hover:opacity-100 sm:left-auto sm:right-6 sm:max-w-md"
               data-testid="panel-excerpt-wrap"
             >
               <div className="rounded-2xl bg-white/95 p-5 text-neutral-800 shadow-2xl backdrop-blur-sm">
@@ -218,14 +218,11 @@ const Banner = () => {
       .catch(() => setBodies((prev) => ({ ...prev, [id]: "" })));
   };
 
-  // Pause auto-scroll only while a tile itself is hovered (so it can be read).
+  // Fetch the body on hover (no pause: the carousel keeps auto-scrolling).
   const handlePanelEnter = (id) => {
-    hoverRef.current = true;
     fetchBody(id);
   };
-  const handlePanelLeave = () => {
-    hoverRef.current = false;
-  };
+  const handlePanelLeave = () => {};
 
   // Single rAF clock drives the vertical scroll, the matching background
   // colour AND the circular 3D tilt of each panel.
@@ -254,7 +251,7 @@ const Banner = () => {
           inited = true;
         }
 
-        const idle = !hoverRef.current && now - lastInteractRef.current > 2200;
+        const idle = now - lastInteractRef.current > 2200;
         if (idle) container.scrollTop += (pitch / secPerPanel) * dt;
 
         // Keep scroll position inside the middle copy for a seamless loop.

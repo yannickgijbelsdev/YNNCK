@@ -12,6 +12,7 @@ import uuid
 import asyncio
 import requests
 import io
+import time
 from PIL import Image
 from datetime import datetime, timezone
 
@@ -171,29 +172,48 @@ def _normalize_item(it):
     return {"id": item_id, "title": title, "excerpt": excerpt, "image": image or "", "raw": it}
 
 
-@api_router.get("/news")
-async def get_news():
-    """Proxy for the external (HTTP) news API so the HTTPS frontend can consume it."""
+_news_cache = {"payload": None, "ts": 0.0}
+_NEWS_TTL = 300  # seconds
+
+
+async def _build_news():
     def fetch():
-        r = requests.get(NEWS_API_URL, timeout=20, allow_redirects=True)
+        r = requests.get(NEWS_API_URL, timeout=8, allow_redirects=True)
         r.raise_for_status()
         return r.json()
 
-    try:
-        data = await asyncio.to_thread(fetch)
-    except Exception as e:
-        logger.error(f"Failed to fetch news API: {e}")
-        return {"items": [], "count": 0, "error": str(e)}
-
+    data = await asyncio.to_thread(fetch)
     raw_items = data.get("items", []) if isinstance(data, dict) else []
     items = [_normalize_item(it) for it in (raw_items or [])]
-
-    # Compute dominant colours concurrently (fast, cached, persisted).
     colors = await asyncio.gather(*[color_for(it.get("image")) for it in items])
     for it, c in zip(items, colors):
         it["color"] = c
-
     return {"items": items, "count": len(items)}
+
+
+@api_router.get("/news")
+async def get_news():
+    """Proxy for the external news API. Cached + time-bounded so it never hangs."""
+    now = time.time()
+    cache = _news_cache
+
+    # Serve a fresh cached payload instantly.
+    if cache["payload"] and now - cache["ts"] < _NEWS_TTL:
+        return cache["payload"]
+
+    # Refresh, but never block longer than ~12s (avoids gateway 502s).
+    try:
+        payload = await asyncio.wait_for(_build_news(), timeout=12)
+        if payload.get("count", 0) > 0:
+            cache["payload"] = payload
+            cache["ts"] = now
+        return payload
+    except Exception as e:
+        logger.error(f"news refresh failed: {e}")
+        # Fall back to the last good payload if we have one.
+        if cache["payload"]:
+            return cache["payload"]
+        return {"items": [], "count": 0, "error": str(e)}
 
 
 @api_router.get("/news/articles/{article_id}")

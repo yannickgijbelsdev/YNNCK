@@ -75,7 +75,7 @@ def dominant_color(url):
     if url in _color_cache:
         return _color_cache[url]
     try:
-        r = requests.get(url, timeout=20)
+        r = requests.get(url, timeout=8)
         r.raise_for_status()
         img = Image.open(io.BytesIO(r.content)).convert("RGB")
         img.thumbnail((90, 90))
@@ -96,6 +96,30 @@ def dominant_color(url):
         hex_color = "#111111"
     _color_cache[url] = hex_color
     return hex_color
+
+
+async def color_for(url):
+    """Dominant colour with in-memory + MongoDB persistence and concurrency."""
+    if not url:
+        return "#111111"
+    if url in _color_cache:
+        return _color_cache[url]
+    try:
+        doc = await db.image_colors.find_one({"_id": url})
+        if doc and doc.get("color"):
+            _color_cache[url] = doc["color"]
+            return doc["color"]
+    except Exception:
+        pass
+    color = await asyncio.to_thread(dominant_color, url)
+    if color and color != "#111111":
+        try:
+            await db.image_colors.update_one(
+                {"_id": url}, {"$set": {"color": color}}, upsert=True
+            )
+        except Exception:
+            pass
+    return color
 
 
 def _pick(d, keys):
@@ -164,11 +188,11 @@ async def get_news():
     raw_items = data.get("items", []) if isinstance(data, dict) else []
     items = [_normalize_item(it) for it in (raw_items or [])]
 
-    def add_colors():
-        for it in items:
-            it["color"] = dominant_color(it.get("image"))
+    # Compute dominant colours concurrently (fast, cached, persisted).
+    colors = await asyncio.gather(*[color_for(it.get("image")) for it in items])
+    for it, c in zip(items, colors):
+        it["color"] = c
 
-    await asyncio.to_thread(add_colors)
     return {"items": items, "count": len(items)}
 
 

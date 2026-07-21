@@ -1,12 +1,15 @@
 """Backend regression tests for the Dutch hero carousel APIs."""
 import os
+import time
 import pytest
 import requests
 
-BASE_URL = os.environ.get("REACT_APP_BACKEND_URL", "https://saffron-header.preview.emergentagent.com").rstrip("/")
+BASE_URL = os.environ["REACT_APP_BACKEND_URL"].rstrip("/")
 API = f"{BASE_URL}/api"
 
 KOODH_ID = "dcb6fd81-49b2-4ff3-9cd1-1aecf64dd756"
+EXPECTED_TITLES = {"RADIOGROEP", "127", "KOODH"}
+FALLBACK_TITLES = {"Voorbeeldproject", "Tweede project"}
 
 
 @pytest.fixture(scope="module")
@@ -14,6 +17,26 @@ def news_items():
     r = requests.get(f"{API}/news", timeout=30)
     assert r.status_code == 200, r.text
     return r.json()
+
+
+# --- /api/news performance ---
+class TestNewsPerformance:
+    def test_news_first_call_fast(self):
+        """Cold-ish call must respond well under 10s."""
+        t0 = time.time()
+        r = requests.get(f"{API}/news", timeout=15)
+        elapsed = time.time() - t0
+        assert r.status_code == 200, r.text
+        assert elapsed < 10.0, f"/api/news took {elapsed:.2f}s (should be < 10s)"
+
+    def test_news_second_call_fast(self):
+        """Persisted colours should make second call fast."""
+        t0 = time.time()
+        r = requests.get(f"{API}/news", timeout=15)
+        elapsed = time.time() - t0
+        assert r.status_code == 200
+        # Second call should be under 5s with cache/persistence
+        assert elapsed < 5.0, f"Second /api/news took {elapsed:.2f}s"
 
 
 # --- /api/news ---
@@ -37,6 +60,24 @@ class TestNews:
         ids = [it["id"] for it in news_items["items"]]
         assert KOODH_ID in ids
 
+    def test_news_has_expected_titles(self, news_items):
+        titles = {it["title"] for it in news_items["items"]}
+        assert EXPECTED_TITLES.issubset(titles), (
+            f"Expected RADIOGROEP/127/KOODH, got {titles}"
+        )
+        # Ensure no fallback slides are ever emitted by the API
+        assert titles.isdisjoint(FALLBACK_TITLES)
+
+    def test_news_count_three(self, news_items):
+        assert news_items["count"] == 3
+
+    def test_news_colors_not_default(self, news_items):
+        """Dominant colours must actually be computed (not the #111111 fallback)."""
+        for it in news_items["items"]:
+            assert it["color"].lower() != "#111111", (
+                f"{it['title']} has default black fallback colour"
+            )
+
 
 # --- /api/news/articles/{id} ---
 class TestArticles:
@@ -46,8 +87,9 @@ class TestArticles:
         data = r.json()
         assert data["id"] == KOODH_ID
         assert data["title"] == "KOODH"
-        assert data["body_html"] == "<p>Test</p>"
-        assert data["body_text"] == "Test"
+        # Upstream body should contain project mentions
+        assert "YNNCK" in data["body_html"] or "Koodh" in data["body_html"]
+        assert len(data["body_text"]) > 0
 
     def test_article_bad_id_graceful(self):
         # External API may error; endpoint should still return JSON (not 500 crash)

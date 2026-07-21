@@ -310,7 +310,16 @@ const Banner = () => {
   }, [articles, total]);
 
   if (loading) {
-    return <section className="h-[100svh] w-full bg-neutral-950" />;
+    return (
+      <section
+        className="h-[100svh] w-full"
+        style={{
+          background:
+            "radial-gradient(120% 90% at 50% 30%, #1a1a1f 0%, #0b0b0d 60%, #050506 100%)",
+        }}
+        data-testid="banner-loading"
+      />
+    );
   }
 
   return (

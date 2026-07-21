@@ -1,0 +1,42 @@
+{
+  "summary": "Verified the NEW mobile behaviour in Banner.jsx — mobile text now hidden by default and tap-reveals (concept-parity with desktop hover), and the custom glasses cursor is hidden on mobile. All 6 spec points pass with zero console errors.",
+  "verification_details": {
+    "mobile_390x844": {
+      "custom_cursor_display": "none (initial and after page.mouse.move) — PASS",
+      "panel_mobile_text_initial": "9 elements, all display:block with opacity=0 (hidden by default) — PASS",
+      "tap_to_reveal": "Clicked centred panel (.group inner wrapper of the middle carousel-panel, idx=4 title '127'); its [data-testid=panel-mobile-text] opacity transitioned 0 -> 1; panel-title-mobile='127' and panel-excerpt-mobile starts with 'Vanuit de dagelijkse praktijk ontstond het idee voor 127.be: een online platform dat een brede verzameling IT-tools samenbrengt op één centrale plaats...' — PASS",
+      "tap_to_hide": "Second click on the same inner wrapper -> panels with opacity=1 collapses to [] — PASS",
+      "auto_scroll": "carousel-scroll scrollTop 1610 -> 1713 over ~3.5s (delta 103px) — PASS",
+      "sweep": "Circular sweep still active on mobile (verified in prior iteration; not regressed — panel positions/transforms unchanged this run)"
+    },
+    "desktop_1920x800": {
+      "custom_cursor_display": "block; opacity 0 -> 1 after mouse.move — PASS",
+      "panel_mobile_text_display": "9 elements, all display:none — PASS",
+      "hover_reveal": "Hovering the centred tile makes [data-testid=panel-title-wrap] opacity=1 showing 'RADIOGROEP' and [data-testid=panel-excerpt-wrap] opacity=1 showing 'Voor Radiogroep was Yannick Gijbels actief als Broadcast Engineer, waarbij hij verantwoordelijk was voor de technische o…' — PASS",
+      "auto_scroll": "scrollTop 1420 -> 1616 over ~3.8s (delta 196px) — PASS",
+      "fallback": "'Voorbeeldproject' NOT present in DOM — PASS"
+    },
+    "console": "0 errors, 0 warnings, 0 pageerrors on both viewports"
+  },
+  "backend_issues": {"critical": [], "minor": []},
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": []
+  },
+  "test_report_links": ["/app/test_reports/iteration_6.json"],
+  "action_items": [],
+  "critical_code_review_comments": [
+    "handlePanelSelect gates on window.innerWidth<768 — correct, and matches handleMouseMove branch. Consider a shared useIsMobile hook + resize listener to avoid reading innerWidth per event; not a functional issue.",
+    "Because loopItems triples the articles (3 copies), tapping panel idx=4 in the middle copy is the intended UX (only that single loop-index toggles). Tapping the same article in another copy (idx=1 or 7) will NOT stay in sync — activeIdx is loop-index based, not article-id based. Low priority since the visible tile is always the centred one.",
+    "Panel wrapper has both onMouseEnter (fires fetchBody) and onClick (toggles active). On touch devices some browsers synthesise mouseenter before click, which currently just triggers fetchBody again (deduped) — no side-effect. OK."
+  ],
+  "updated_files": [],
+  "success_rate": {"backend": "n/a (frontend-only requested)", "frontend": "100%"},
+  "test_credentials": "none required",
+  "seed_data_creation": "none",
+  "retest_needed": false,
+  "main_agent_can_self_test": true,
+  "context_for_next_testing_agent": "Mobile tap-reveal fully working: panel-mobile-text now starts opacity:0 (display:block) and toggles to opacity:1 on click of the .group inner wrapper inside the centred [data-testid=carousel-panel]. Custom cursor is display:none on mobile via `hidden ... sm:block` classes; handleMouseMove also sets opacity=0 defensively on mobile. Desktop unchanged: hover reveals floating title/body, custom cursor visible & follows mouse. To test on mobile, click the centred tile's inner wrapper (not the outer carousel-panel container) via JS since transformed elements sometimes intercept mouse.click at odd coords. Preview base = https://saffron-header.preview.emergentagent.com.",
+  "rca of the issue": "Not a bug — feature verification. Implementation change (Panel gained active/onSelect props; mobile-text wrapper uses `${active?'opacity-100':'opacity-0'}`; handlePanelSelect toggles activeIdx only when innerWidth<768; custom cursor uses `hidden ... sm:block` + handleMouseMove opacity gate) all behave exactly as specified."
+}

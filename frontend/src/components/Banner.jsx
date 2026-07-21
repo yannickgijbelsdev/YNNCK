@@ -81,7 +81,7 @@ const CircularText = ({ text, rx, ry }) => {
 };
 
 const Panel = React.forwardRef(
-  ({ id, image, title, excerpt, body, onEnter, onLeave }, ref) => {
+  ({ id, image, title, excerpt, body, active, onEnter, onLeave, onSelect }, ref) => {
     const html = body || "";
     const hasBody = html.trim().length > 0;
     return (
@@ -95,6 +95,7 @@ const Panel = React.forwardRef(
           style={{ transformOrigin: "center center" }}
           onMouseEnter={() => onEnter && onEnter(id)}
           onMouseLeave={() => onLeave && onLeave()}
+          onClick={() => onSelect && onSelect()}
         >
           <img
             src={image}
@@ -140,8 +141,13 @@ const Panel = React.forwardRef(
             </div>
           )}
 
-          {/* Title + body BELOW the tile — mobile only, always visible */}
-          <div className="mt-5 px-3 text-center sm:hidden" data-testid="panel-mobile-text">
+          {/* Title + body BELOW the tile — mobile only, revealed on tap */}
+          <div
+            className={`absolute left-1/2 top-full mt-4 w-[86vw] -translate-x-1/2 text-center transition-opacity duration-300 sm:hidden ${
+              active ? "opacity-100" : "opacity-0"
+            }`}
+            data-testid="panel-mobile-text"
+          >
             {title && (
               <h2
                 className="brand-display text-2xl font-bold leading-tight text-white drop-shadow-[0_3px_14px_rgba(0,0,0,0.85)]"
@@ -183,16 +189,26 @@ const Banner = () => {
   const panelRefs = useRef([]);
   const logoWrapRef = useRef(null);
   const cursorRef = useRef(null);
+  const [activeIdx, setActiveIdx] = useState(null);
+
+  const handlePanelSelect = (i) => {
+    if (window.innerWidth >= 768) return; // desktop uses hover, not tap
+    setActiveIdx((prev) => (prev === i ? null : i));
+  };
 
   const handleMouseMove = (e) => {
+    const isMobile = window.innerWidth < 768;
     if (logoWrapRef.current) {
       const nx = e.clientX / window.innerWidth - 0.5;
       const ny = e.clientY / window.innerHeight - 0.5;
       logoWrapRef.current.style.transform = `translate(${nx * 28}px, ${ny * 28}px)`;
     }
     if (cursorRef.current) {
-      cursorRef.current.style.opacity = "1";
-      cursorRef.current.style.transform = `translate(${e.clientX}px, ${e.clientY}px) translate(-50%, -50%)`;
+      // Custom glasses cursor only on desktop; hidden on mobile/touch.
+      cursorRef.current.style.opacity = isMobile ? "0" : "1";
+      if (!isMobile) {
+        cursorRef.current.style.transform = `translate(${e.clientX}px, ${e.clientY}px) translate(-50%, -50%)`;
+      }
     }
   };
 
@@ -399,8 +415,10 @@ const Banner = () => {
                 title={a.title}
                 excerpt={a.excerpt}
                 body={bodies[a.id]}
+                active={activeIdx === i}
                 onEnter={handlePanelEnter}
                 onLeave={handlePanelLeave}
+                onSelect={() => handlePanelSelect(i)}
               />
             ))}
           </div>
@@ -427,10 +445,10 @@ const Banner = () => {
         </div>
       </div>
 
-      {/* Custom cursor: the glasses with a rotating "DIT IS JE MUIS" ring */}
+      {/* Custom cursor: the glasses with a rotating "DIT IS JE MUIS" ring (desktop only) */}
       <div
         ref={cursorRef}
-        className="pointer-events-none fixed left-0 top-0 z-[9999] opacity-0"
+        className="pointer-events-none fixed left-0 top-0 z-[9999] hidden opacity-0 sm:block"
         style={{ willChange: "transform" }}
         data-testid="custom-cursor"
         aria-hidden="true"

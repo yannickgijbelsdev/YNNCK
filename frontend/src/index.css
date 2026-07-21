@@ -101,14 +101,9 @@ body {
     animation: floatySlow 5.5s ease-in-out infinite;
 }
 
-/* Circular rotating text around the logo */
-@keyframes spinSlow {
-    from { transform: rotate(0deg); }
-    to { transform: rotate(360deg); }
-}
+/* Circular / oval text ring around the logo (letters positioned via JS) */
 .circular-text {
     position: relative;
-    animation: spinSlow 16s linear infinite;
 }
 .circular-text span {
     position: absolute;
@@ -116,9 +111,10 @@ body {
     left: 50%;
     font-size: 12px;
     font-weight: 700;
-    letter-spacing: 0.15em;
+    letter-spacing: 0.05em;
     color: rgba(255, 255, 255, 0.9);
     text-transform: uppercase;
+    will-change: transform;
 }
 
 /* Plant decorations: gentle, organic shaking as if lightly rattled */

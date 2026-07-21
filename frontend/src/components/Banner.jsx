@@ -33,25 +33,42 @@ const hexToRgb = (hex) => {
   ];
 };
 
-// Rotating circular "YNNCK" text ring drawn around the logo.
-const CircularText = ({ text, radius }) => {
-  const chars = text.split("");
-  const step = 360 / chars.length;
+// Oval "YNNCK" text ring that follows the logo's face shape; letters march
+// around a fixed ellipse (the ring itself does not spin, so the shape holds).
+const CircularText = ({ text, rx, ry }) => {
+  const chars = useMemo(() => [...text], [text]);
+  const spanRefs = useRef([]);
+
+  useEffect(() => {
+    let raf;
+    const start = performance.now();
+    const n = chars.length;
+    const loop = (now) => {
+      const phase = ((now - start) / 1000) * 0.4; // radians per second
+      for (let i = 0; i < n; i++) {
+        const a = phase + (i / n) * Math.PI * 2;
+        const x = Math.sin(a) * rx;
+        const y = -Math.cos(a) * ry;
+        const el = spanRefs.current[i];
+        if (el)
+          el.style.transform = `translate(-50%, -50%) translate(${x}px, ${y}px) rotate(${a}rad)`;
+      }
+      raf = requestAnimationFrame(loop);
+    };
+    raf = requestAnimationFrame(loop);
+    return () => cancelAnimationFrame(raf);
+  }, [chars.length, rx, ry]);
+
   return (
     <div
       className="circular-text pointer-events-none"
-      style={{ width: radius * 2, height: radius * 2 }}
+      style={{ width: rx * 2, height: ry * 2 }}
       data-testid="circular-text"
       aria-hidden="true"
     >
       {chars.map((c, i) => (
-        <span
-          key={i}
-          style={{
-            transform: `translate(-50%, -50%) rotate(${i * step}deg) translateY(-${radius}px)`,
-          }}
-        >
-          {c}
+        <span key={i} ref={(el) => (spanRefs.current[i] = el)}>
+          {c === " " ? "\u00A0" : c}
         </span>
       ))}
     </div>
@@ -207,18 +224,23 @@ const Banner = () => {
         if (colorRef.current)
           colorRef.current.style.backgroundColor = `rgba(${r}, ${g}, ${b}, 0.6)`;
 
-        // Circular 3D tilt: flat in the centre, tilting away above and below.
+        // Circular sweep: panels arc off the page and flow back in, flat and
+        // front in the centre, curving out to the sides above and below.
         const crect = container.getBoundingClientRect();
         const cCenter = crect.top + crect.height / 2;
+        const R = crect.height;
         for (const el of panelRefs.current) {
           if (!el) continue;
           const pr = el.getBoundingClientRect();
           const pc = pr.top + pr.height / 2;
           const d = (pc - cCenter) / crect.height;
-          const angle = Math.max(-72, Math.min(72, -d * 62));
-          const scale = 1 - Math.min(Math.abs(d) * 0.28, 0.5);
-          el.style.transform = `perspective(1200px) rotateX(${angle}deg) scale(${scale})`;
-          el.style.opacity = `${1 - Math.min(Math.abs(d) * 0.7, 0.82)}`;
+          const theta = Math.max(-1.4, Math.min(1.4, d * 1.15));
+          const x = Math.sin(theta) * R * 1.5;
+          const z = (Math.cos(theta) - 1) * R * 0.65;
+          const rotY = -theta * (180 / Math.PI) * 0.7;
+          const scale = Math.max(0.4, Math.cos(theta));
+          el.style.transform = `perspective(1500px) translate3d(${x}px, 0px, ${z}px) rotateY(${rotY}deg) scale(${scale})`;
+          el.style.opacity = `${Math.max(0, 1 - Math.abs(d) * 0.85)}`;
         }
       }
       raf = requestAnimationFrame(loop);
@@ -286,7 +308,7 @@ const Banner = () => {
         data-testid="logo-wrapper"
       >
         <div className="absolute inset-0 flex items-center justify-center">
-          <CircularText text="YNNCK · YNNCK · " radius={70} />
+          <CircularText text="YNNCK · YNNCK · " rx={58} ry={72} />
         </div>
         <div className="absolute inset-0 flex items-center justify-center">
           <img

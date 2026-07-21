@@ -76,6 +76,65 @@ body {
     animation: logoWiggle 5s ease-in-out infinite;
 }
 
+/* Plant decorations: gentle, organic shaking as if lightly rattled */
+@keyframes plantShakeA {
+    0%, 100% {
+        transform: rotate(0deg) translateX(0);
+    }
+    20% {
+        transform: rotate(1.4deg) translateX(1px);
+    }
+    40% {
+        transform: rotate(-1.1deg) translateX(-1px);
+    }
+    60% {
+        transform: rotate(0.8deg) translateX(1px);
+    }
+    80% {
+        transform: rotate(-0.6deg) translateX(-1px);
+    }
+}
+
+@keyframes plantShakeB {
+    0%, 100% {
+        transform: rotate(0deg) translateY(0);
+    }
+    25% {
+        transform: rotate(-1.6deg) translateY(-1px);
+    }
+    50% {
+        transform: rotate(1.2deg) translateY(1px);
+    }
+    75% {
+        transform: rotate(-0.9deg) translateY(-1px);
+    }
+}
+
+/* Hanging vines swing from the top */
+@keyframes vineSway {
+    0%, 100% {
+        transform: rotate(-1.2deg);
+    }
+    50% {
+        transform: rotate(1.2deg);
+    }
+}
+
+.plant-shake-a {
+    transform-origin: bottom center;
+    animation: plantShakeA 3.2s ease-in-out infinite;
+}
+
+.plant-shake-b {
+    transform-origin: bottom center;
+    animation: plantShakeB 4.1s ease-in-out infinite;
+}
+
+.vine-sway {
+    transform-origin: top center;
+    animation: vineSway 5s ease-in-out infinite;
+}
+
 @keyframes popupIn {
     from {
         opacity: 0;

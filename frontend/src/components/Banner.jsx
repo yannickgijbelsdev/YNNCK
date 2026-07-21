@@ -2,6 +2,12 @@ import React, { useEffect, useMemo, useRef, useState } from "react";
 import axios from "axios";
 import logo from "../assets/logo_original_cropped.png";
 import jungleBg from "../assets/jungle_bg.png";
+import vineDense from "../assets/plants/vine_dense.png";
+import vineStrands from "../assets/plants/vine_strands.png";
+import bushMid from "../assets/plants/bush_mid.png";
+import fernBr from "../assets/plants/fern_br.png";
+import palmSide from "../assets/plants/palm_side.png";
+import monstera from "../assets/plants/monstera.png";
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 const API = `${BACKEND_URL}/api`;
@@ -131,9 +137,9 @@ const Banner = () => {
       className="relative h-[100svh] min-h-[100svh] w-full overflow-hidden bg-neutral-950 text-white"
       data-testid="banner-section"
     >
-      {/* Base jungle background image */}
+      {/* Base jungle background image (barely visible) */}
       <div
-        className="absolute inset-0 z-0 bg-cover bg-center"
+        className="absolute inset-0 z-0 bg-cover bg-center opacity-[0.13]"
         style={{ backgroundImage: `url("${jungleBg}")` }}
         aria-hidden="true"
       />
@@ -178,6 +184,56 @@ const Banner = () => {
           className="logo-wiggle h-16 w-auto object-contain sm:h-20 md:h-24"
           draggable={false}
           data-testid="brand-logo"
+        />
+        {/* Small leaf accent next to the logo */}
+        <img
+          src={monstera}
+          alt=""
+          className="plant-shake-b pointer-events-none absolute -right-10 top-1 h-12 w-auto object-contain drop-shadow-lg sm:h-14"
+          draggable={false}
+          data-testid="plant-logo-leaf"
+        />
+      </div>
+
+      {/* Jungle plant decorations around the edges */}
+      <div className="pointer-events-none absolute inset-0 z-30" aria-hidden="true">
+        {/* Hanging vines from the top corners */}
+        <img
+          src={vineDense}
+          alt=""
+          className="vine-sway absolute -top-6 right-0 h-52 w-auto object-contain drop-shadow-xl sm:h-72 md:h-80"
+          draggable={false}
+          data-testid="plant-vine-right"
+        />
+        <img
+          src={vineStrands}
+          alt=""
+          className="vine-sway absolute -top-4 left-1/3 h-40 w-auto object-contain opacity-90 drop-shadow-xl sm:h-56"
+          draggable={false}
+          data-testid="plant-vine-center"
+        />
+
+        {/* Plants growing in from the bottom edges */}
+        <img
+          src={palmSide}
+          alt=""
+          className="plant-shake-a absolute bottom-0 left-0 h-56 w-auto object-contain drop-shadow-xl sm:h-72 md:h-96"
+          draggable={false}
+          data-testid="plant-palm-left"
+        />
+        <img
+          src={bushMid}
+          alt=""
+          className="plant-shake-b absolute -left-4 bottom-0 h-32 w-auto object-contain drop-shadow-xl sm:h-40"
+          draggable={false}
+          data-testid="plant-bush-left"
+        />
+        <img
+          src={fernBr}
+          alt=""
+          className="plant-shake-a absolute bottom-0 right-0 h-48 w-auto object-contain drop-shadow-xl sm:h-64 md:h-80"
+          draggable={false}
+          data-testid="plant-fern-right"
         />
       </div>
     </section>

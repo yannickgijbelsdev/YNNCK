@@ -393,17 +393,18 @@ const Banner = () => {
         data-testid="custom-cursor"
         aria-hidden="true"
       >
-        <div
-          className="relative flex items-center justify-center"
-          style={{ width: 130, height: 130 }}
-        >
-          <CircularText text="DIT IS JE MUIS · " rx={56} ry={46} />
-          <img
-            src={glassesCursor}
-            alt=""
-            className="w-14 drop-shadow-[0_1px_5px_rgba(0,0,0,0.85)]"
-            draggable={false}
-          />
+        <div className="relative" style={{ width: 130, height: 130 }}>
+          <div className="absolute inset-0 flex items-center justify-center">
+            <CircularText text="DIT IS JE MUIS · " rx={56} ry={46} />
+          </div>
+          <div className="absolute inset-0 flex items-center justify-center">
+            <img
+              src={glassesCursor}
+              alt=""
+              className="w-14 drop-shadow-[0_1px_5px_rgba(0,0,0,0.85)]"
+              draggable={false}
+            />
+          </div>
         </div>
       </div>
     </section>

@@ -7,6 +7,9 @@ import vineStrands from "../assets/plants/vine_strands.png";
 import bushMid from "../assets/plants/bush_mid.png";
 import fernBr from "../assets/plants/fern_br.png";
 import palmSide from "../assets/plants/palm_side.png";
+import palmSingle from "../assets/plants/palm_single.png";
+import palmTop from "../assets/plants/palm_top.png";
+import leafBig from "../assets/plants/leaf_big.png";
 import monstera from "../assets/plants/monstera.png";
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
@@ -195,46 +198,31 @@ const Banner = () => {
         />
       </div>
 
-      {/* Jungle plant decorations around the edges */}
+      {/* Jungle foliage frame: dense, overlapping growth around all edges */}
       <div className="pointer-events-none absolute inset-0 z-30" aria-hidden="true">
-        {/* Hanging vines from the top corners */}
-        <img
-          src={vineDense}
-          alt=""
-          className="vine-sway absolute -top-6 right-0 h-52 w-auto object-contain drop-shadow-xl sm:h-72 md:h-80"
-          draggable={false}
-          data-testid="plant-vine-right"
-        />
-        <img
-          src={vineStrands}
-          alt=""
-          className="vine-sway absolute -top-4 left-1/3 h-40 w-auto object-contain opacity-90 drop-shadow-xl sm:h-56"
-          draggable={false}
-          data-testid="plant-vine-center"
-        />
+        {/* TOP: continuous canopy of hanging vines across the whole width */}
+        <img src={vineStrands} alt="" className="vine-sway absolute -top-6 left-0 h-44 w-auto object-contain drop-shadow-xl sm:h-60 md:h-72" draggable={false} />
+        <img src={vineDense} alt="" className="vine-sway absolute -top-8 left-[14%] h-40 w-auto object-contain drop-shadow-xl sm:h-56 md:h-64" draggable={false} style={{ animationDelay: "-1.2s" }} />
+        <img src={vineStrands} alt="" className="vine-sway absolute -top-4 left-[30%] h-36 w-auto object-contain opacity-90 drop-shadow-xl sm:h-52" draggable={false} style={{ animationDelay: "-2.4s" }} />
+        <img src={vineDense} alt="" className="vine-sway absolute -top-8 left-1/2 h-40 w-auto object-contain drop-shadow-xl sm:h-56 md:h-64" draggable={false} style={{ animationDelay: "-0.6s" }} />
+        <img src={vineStrands} alt="" className="vine-sway absolute -top-5 left-[68%] h-40 w-auto object-contain opacity-90 drop-shadow-xl sm:h-56" draggable={false} style={{ animationDelay: "-3s" }} />
+        <img src={vineDense} alt="" className="vine-sway absolute -top-8 right-0 h-48 w-auto object-contain drop-shadow-xl sm:h-64 md:h-80" draggable={false} style={{ animationDelay: "-1.8s" }} />
 
-        {/* Plants growing in from the bottom edges */}
-        <img
-          src={palmSide}
-          alt=""
-          className="plant-shake-a absolute bottom-0 left-0 h-56 w-auto object-contain drop-shadow-xl sm:h-72 md:h-96"
-          draggable={false}
-          data-testid="plant-palm-left"
-        />
-        <img
-          src={bushMid}
-          alt=""
-          className="plant-shake-b absolute -left-4 bottom-0 h-32 w-auto object-contain drop-shadow-xl sm:h-40"
-          draggable={false}
-          data-testid="plant-bush-left"
-        />
-        <img
-          src={fernBr}
-          alt=""
-          className="plant-shake-a absolute bottom-0 right-0 h-48 w-auto object-contain drop-shadow-xl sm:h-64 md:h-80"
-          draggable={false}
-          data-testid="plant-fern-right"
-        />
+        {/* SIDES: tall palms framing left and right */}
+        <img src={palmSide} alt="" className="plant-shake-a absolute -left-8 top-1/4 h-72 w-auto object-contain drop-shadow-xl sm:h-96" draggable={false} style={{ animationDelay: "-1s" }} />
+        <img src={palmTop} alt="" className="plant-shake-b absolute -right-6 top-[38%] h-64 w-auto -scale-x-100 object-contain drop-shadow-xl sm:h-80" draggable={false} style={{ animationDelay: "-2.2s" }} />
+
+        {/* BOTTOM: dense, continuous band of overlapping plants across full width */}
+        <img src={palmSide} alt="" className="plant-shake-a absolute -left-6 bottom-0 h-64 w-auto object-contain drop-shadow-xl sm:h-80 md:h-[26rem]" draggable={false} />
+        <img src={bushMid} alt="" className="plant-shake-b absolute left-[8%] bottom-0 h-40 w-auto object-contain drop-shadow-xl sm:h-52" draggable={false} style={{ animationDelay: "-1.4s" }} />
+        <img src={fernBr} alt="" className="plant-shake-a absolute left-[18%] bottom-0 h-48 w-auto object-contain drop-shadow-xl sm:h-64" draggable={false} style={{ animationDelay: "-0.8s" }} />
+        <img src={palmSingle} alt="" className="plant-shake-b absolute left-[30%] bottom-0 h-52 w-auto object-contain drop-shadow-xl sm:h-72" draggable={false} style={{ animationDelay: "-2.6s" }} />
+        <img src={leafBig} alt="" className="plant-shake-a absolute left-[42%] bottom-0 h-40 w-auto object-contain drop-shadow-xl sm:h-52" draggable={false} style={{ animationDelay: "-1.9s" }} />
+        <img src={bushMid} alt="" className="plant-shake-b absolute left-1/2 bottom-0 h-44 w-auto object-contain drop-shadow-xl sm:h-56" draggable={false} style={{ animationDelay: "-0.4s" }} />
+        <img src={fernBr} alt="" className="plant-shake-a absolute left-[62%] bottom-0 h-48 w-auto -scale-x-100 object-contain drop-shadow-xl sm:h-64" draggable={false} style={{ animationDelay: "-3.1s" }} />
+        <img src={palmSingle} alt="" className="plant-shake-b absolute left-[74%] bottom-0 h-52 w-auto -scale-x-100 object-contain drop-shadow-xl sm:h-72" draggable={false} style={{ animationDelay: "-1.1s" }} />
+        <img src={monstera} alt="" className="plant-shake-a absolute left-[84%] bottom-0 h-44 w-auto object-contain drop-shadow-xl sm:h-56" draggable={false} style={{ animationDelay: "-2.1s" }} />
+        <img src={fernBr} alt="" className="plant-shake-b absolute -right-6 bottom-0 h-56 w-auto object-contain drop-shadow-xl sm:h-72 md:h-96" draggable={false} style={{ animationDelay: "-0.9s" }} />
       </div>
     </section>
   );

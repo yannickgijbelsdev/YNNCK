@@ -1,0 +1,24 @@
+{
+  "summary": "Verified the new mobile behaviour in Banner.jsx: (1) MOBILE (390x844) now uses the SAME circular sweep as desktop with smaller amplitude — panels have varying translate3d x (e.g. -831, -735, -322, +229, +682, +831 px), rotateY (56, 42, 15, -11, -37, -56 deg) and scales 0.4–0.96, mirroring desktop pattern (which uses larger x up to ~1182). Auto-scroll advances scrollTop by 240px in 4s on mobile, 211px on desktop. (2) [data-testid=panel-mobile-text] is DISPLAYED (display:block) on every panel on mobile and sits BELOW the image (verified panel-title-mobile top > img.bottom on every visible tile, e.g. imgBottom=26.69 vs mobTitleTop=39.63). Titles present (RADIOGROEP / 127 / KOODH) and body content prefetched for all three articles — the KOODH panel-excerpt-mobile contains real Dutch body starting 'Met YNNCK bundelt ondernemer Yannick Gijbels zijn expertise binnen Koodh, waar hij actief is als Co-Founder, en Koodh Me…' (contains YNNCK and Koodh). (3) On mobile the desktop floating [data-testid=panel-title-wrap] and [data-testid=panel-excerpt-wrap] are display:none for every panel. (4) DESKTOP (1920x800) regression: floating title/body still hidden by default and reveal on real mouse hover — after page.mouse.move to the centred '127' tile, titleWrap opacity=1 showing '127' top-left and excerptWrap opacity=1 showing 'Vanuit de dagelijkse praktijk ontstond het idee voor 127.be…'. Desktop panel-mobile-text is display:none. Auto-scroll intact. (5) Only real articles rendered (RADIOGROEP / 127 / KOODH) — FALLBACK 'Voorbeeldproject' NOT present on either viewport. (6) Zero console errors / pageerrors on both viewports.",
+  "backend_issues": {"critical": [], "minor": []},
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": []
+  },
+  "test_report_links": ["/app/test_reports/iteration_5.json"],
+  "action_items": [],
+  "critical_code_review_comments": [
+    "Banner.jsx now uses window.innerWidth<768 inside the rAF loop each frame — cheap but a resize-listener that flips a ref would be marginally cleaner. Not a blocker.",
+    "Prefetch effect calls fetchBody(a.id) for every article on load — good for mobile UX; fetchBody already dedupes via bodies[id] check so no duplicate requests. OK.",
+    "Panel wrapper is rendered 3x (loopItems) so each article's mobile body HTML is duplicated in DOM — acceptable given only 3 real articles, but if the news feed grows this could bloat DOM."
+  ],
+  "updated_files": [],
+  "success_rate": {"backend": "n/a (frontend-only requested)", "frontend": "100%"},
+  "test_credentials": "none required",
+  "seed_data_creation": "none",
+  "retest_needed": false,
+  "main_agent_can_self_test": true,
+  "context_for_next_testing_agent": "Mobile now truly mirrors desktop sweep with xMul=1.0 (vs 1.5 desktop). Verified via transform inspection on 9 loop-panels at 390x844 (varying x/rotateY/scale) and at 1920x800. Below-tile mobile text works: panel-mobile-text display=block on mobile, none on desktop; panel-title-wrap/panel-excerpt-wrap display=none on mobile, block+hover-opacity on desktop. Real bodies prefetched — all three ids (radiogroep, 127, koodh) have non-empty excerpts. Preview base = https://saffron-header.preview.emergentagent.com.",
+  "rca of the issue": "Not a bug this iteration — feature verification. Prior iteration 4 fix (isMobile branch) removed the sweep on mobile which the user wanted back. Current implementation restores the identical circular sweep on mobile by only reducing horizontal amplitude (xMul 1.5→1.0) while keeping rotateY/z/scale/opacity identical, and adds an always-visible mobile-only block below each image containing title+prefetched body. Behaviour confirmed matches spec."
+}

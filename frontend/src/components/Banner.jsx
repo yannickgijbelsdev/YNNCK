@@ -99,18 +99,18 @@ const Panel = React.forwardRef(
           <img
             src={image}
             alt={title || ""}
-            className="max-h-[62vh] w-auto max-w-[85vw] rounded-xl object-contain shadow-2xl sm:max-w-[54vw]"
+            className="max-h-[42vh] w-auto max-w-[82vw] rounded-xl object-contain shadow-2xl sm:max-h-[62vh] sm:max-w-[54vw]"
             draggable={false}
           />
 
-          {/* Floating title (left side) */}
+          {/* Floating title (left side) — desktop only */}
           {title && (
             <div
-              className="floaty pointer-events-none absolute -top-6 left-2 z-10 opacity-0 transition-opacity duration-500 group-hover:opacity-100 sm:-top-8 sm:left-4"
+              className="floaty pointer-events-none absolute -top-8 left-4 z-10 hidden opacity-0 transition-opacity duration-500 group-hover:opacity-100 sm:block"
               data-testid="panel-title-wrap"
             >
               <h2
-                className="brand-display text-3xl font-bold leading-none text-white drop-shadow-[0_6px_24px_rgba(0,0,0,0.85)] sm:text-5xl md:text-6xl"
+                className="brand-display text-5xl font-bold leading-none text-white drop-shadow-[0_6px_24px_rgba(0,0,0,0.85)] md:text-6xl"
                 data-testid="panel-title"
               >
                 {title}
@@ -118,30 +118,53 @@ const Panel = React.forwardRef(
             </div>
           )}
 
-          {/* Floating body text (no card) beside the tile, to its right */}
+          {/* Floating body text beside the tile (right) — desktop only */}
           {(hasBody || excerpt) && (
             <div
-              className="pointer-events-none absolute left-full top-1/2 z-10 ml-6 w-60 -translate-y-1/2 opacity-0 transition-opacity duration-500 group-hover:opacity-100 sm:w-96"
+              className="pointer-events-none absolute left-full top-1/2 z-10 ml-6 hidden w-96 -translate-y-1/2 opacity-0 transition-opacity duration-500 group-hover:opacity-100 sm:block"
               data-testid="panel-excerpt-wrap"
             >
               <div className="floaty-slow text-white drop-shadow-[0_2px_12px_rgba(0,0,0,0.95)]">
                 {hasBody ? (
                   <div
-                    className="panel-body text-sm leading-relaxed sm:text-base"
+                    className="panel-body text-base leading-relaxed"
                     data-testid="panel-excerpt"
                     dangerouslySetInnerHTML={{ __html: html }}
                   />
                 ) : (
-                  <p
-                    className="text-sm leading-relaxed sm:text-base"
-                    data-testid="panel-excerpt"
-                  >
+                  <p className="text-base leading-relaxed" data-testid="panel-excerpt">
                     {excerpt}
                   </p>
                 )}
               </div>
             </div>
           )}
+
+          {/* Title + body BELOW the tile — mobile only, always visible */}
+          <div className="mt-5 px-3 text-center sm:hidden" data-testid="panel-mobile-text">
+            {title && (
+              <h2
+                className="brand-display text-2xl font-bold leading-tight text-white drop-shadow-[0_3px_14px_rgba(0,0,0,0.85)]"
+                data-testid="panel-title-mobile"
+              >
+                {title}
+              </h2>
+            )}
+            {hasBody ? (
+              <div
+                className="panel-body mx-auto mt-2 max-w-[82vw] text-[13px] leading-relaxed text-white/85"
+                data-testid="panel-excerpt-mobile"
+                dangerouslySetInnerHTML={{ __html: html }}
+              />
+            ) : excerpt ? (
+              <p
+                className="mx-auto mt-2 max-w-[82vw] text-[13px] leading-relaxed text-white/85"
+                data-testid="panel-excerpt-mobile"
+              >
+                {excerpt}
+              </p>
+            ) : null}
+          </div>
         </div>
       </div>
     );
@@ -202,6 +225,13 @@ const Banner = () => {
   }, []);
 
   const total = articles.length;
+
+  // Prefetch all article bodies so the mobile below-tile text is ready
+  // immediately (there is no hover on touch devices).
+  useEffect(() => {
+    articles.forEach((a) => a.id && fetchBody(a.id));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [articles]);
 
   // Three copies so the vertical loop is seamless in both directions.
   const loopItems = useMemo(
@@ -295,20 +325,14 @@ const Banner = () => {
           const pr = el.getBoundingClientRect();
           const pc = pr.top + pr.height / 2;
           const d = (pc - cCenter) / crect.height;
-          if (isMobile) {
-            const angle = Math.max(-42, Math.min(42, -d * 38));
-            const scale = Math.max(0.66, 1 - Math.abs(d) * 0.22);
-            el.style.transform = `perspective(1100px) rotateX(${angle}deg) scale(${scale})`;
-            el.style.opacity = `${Math.max(0.2, 1 - Math.abs(d) * 0.8)}`;
-          } else {
-            const theta = Math.max(-1.4, Math.min(1.4, d * 1.15));
-            const x = Math.sin(theta) * R * 1.5;
-            const z = (Math.cos(theta) - 1) * R * 0.65;
-            const rotY = -theta * (180 / Math.PI) * 0.7;
-            const scale = Math.max(0.4, Math.cos(theta));
-            el.style.transform = `perspective(1500px) translate3d(${x}px, 0px, ${z}px) rotateY(${rotY}deg) scale(${scale})`;
-            el.style.opacity = `${Math.max(0, 1 - Math.abs(d) * 0.85)}`;
-          }
+          const theta = Math.max(-1.4, Math.min(1.4, d * 1.15));
+          const xMul = isMobile ? 1.0 : 1.5;
+          const x = Math.sin(theta) * R * xMul;
+          const z = (Math.cos(theta) - 1) * R * 0.65;
+          const rotY = -theta * (180 / Math.PI) * 0.7;
+          const scale = Math.max(0.4, Math.cos(theta));
+          el.style.transform = `perspective(1500px) translate3d(${x}px, 0px, ${z}px) rotateY(${rotY}deg) scale(${scale})`;
+          el.style.opacity = `${Math.max(0, 1 - Math.abs(d) * 0.85)}`;
         }
       }
       raf = requestAnimationFrame(loop);

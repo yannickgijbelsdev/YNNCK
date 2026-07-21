@@ -159,12 +159,18 @@ const Banner = () => {
   const lastInteractRef = useRef(0);
   const panelRefs = useRef([]);
   const logoWrapRef = useRef(null);
+  const cursorRef = useRef(null);
 
   const handleMouseMove = (e) => {
-    if (!logoWrapRef.current) return;
-    const nx = e.clientX / window.innerWidth - 0.5;
-    const ny = e.clientY / window.innerHeight - 0.5;
-    logoWrapRef.current.style.transform = `translate(${nx * 28}px, ${ny * 28}px)`;
+    if (logoWrapRef.current) {
+      const nx = e.clientX / window.innerWidth - 0.5;
+      const ny = e.clientY / window.innerHeight - 0.5;
+      logoWrapRef.current.style.transform = `translate(${nx * 28}px, ${ny * 28}px)`;
+    }
+    if (cursorRef.current) {
+      cursorRef.current.style.opacity = "1";
+      cursorRef.current.style.transform = `translate(${e.clientX}px, ${e.clientY}px) translate(-50%, -50%)`;
+    }
   };
 
   // Fetch projects for the carousel
@@ -312,7 +318,7 @@ const Banner = () => {
       className="relative h-[100svh] min-h-[100svh] w-full overflow-hidden bg-neutral-950 text-white"
       data-testid="banner-section"
       onMouseMove={handleMouseMove}
-      style={{ cursor: `url(${glassesCursor}) 32 8, auto` }}
+      style={{ cursor: "none" }}
     >
       {/* Animated colour tint that matches the on-screen photo */}
       <div
@@ -375,6 +381,28 @@ const Banner = () => {
             className="logo-wiggle relative z-10 h-16 w-auto object-contain sm:h-20 md:h-24"
             draggable={false}
             data-testid="brand-logo"
+          />
+        </div>
+      </div>
+
+      {/* Custom cursor: the glasses with a rotating "DIT IS JE MUIS" ring */}
+      <div
+        ref={cursorRef}
+        className="pointer-events-none fixed left-0 top-0 z-[9999] opacity-0"
+        style={{ willChange: "transform" }}
+        data-testid="custom-cursor"
+        aria-hidden="true"
+      >
+        <div
+          className="relative flex items-center justify-center"
+          style={{ width: 130, height: 130 }}
+        >
+          <CircularText text="DIT IS JE MUIS · " rx={56} ry={46} />
+          <img
+            src={glassesCursor}
+            alt=""
+            className="w-14 drop-shadow-[0_1px_5px_rgba(0,0,0,0.85)]"
+            draggable={false}
           />
         </div>
       </div>

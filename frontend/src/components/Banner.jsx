@@ -98,7 +98,7 @@ const Panel = React.forwardRef(
           <img
             src={image}
             alt={title || ""}
-            className="max-h-[72vh] w-auto max-w-[90vw] rounded-xl object-contain shadow-2xl"
+            className="max-h-[62vh] w-auto max-w-[85vw] rounded-xl object-contain shadow-2xl sm:max-w-[54vw]"
             draggable={false}
           />
 
@@ -117,22 +117,22 @@ const Panel = React.forwardRef(
             </div>
           )}
 
-          {/* Floating white rounded body card (right side, vertically centred) */}
+          {/* Floating body text (no card) beside the tile, to its right */}
           {(hasBody || excerpt) && (
             <div
-              className="pointer-events-none absolute right-2 top-1/2 z-10 w-[70%] -translate-y-1/2 opacity-0 transition-opacity duration-500 group-hover:opacity-100 sm:right-[-1.5rem] sm:w-auto sm:max-w-sm"
+              className="pointer-events-none absolute left-full top-1/2 z-10 ml-6 w-56 -translate-y-1/2 opacity-0 transition-opacity duration-500 group-hover:opacity-100 sm:w-72"
               data-testid="panel-excerpt-wrap"
             >
-              <div className="floaty-slow rounded-2xl bg-white/95 p-5 text-neutral-800 shadow-2xl backdrop-blur-sm">
+              <div className="floaty-slow text-white drop-shadow-[0_2px_12px_rgba(0,0,0,0.95)]">
                 {hasBody ? (
                   <div
-                    className="panel-body max-h-52 overflow-hidden text-sm leading-relaxed sm:text-base"
+                    className="panel-body max-h-[60vh] overflow-hidden text-sm leading-relaxed sm:text-base"
                     data-testid="panel-excerpt"
                     dangerouslySetInnerHTML={{ __html: html }}
                   />
                 ) : (
                   <p
-                    className="max-h-52 overflow-hidden text-sm leading-relaxed sm:text-base"
+                    className="max-h-[60vh] overflow-hidden text-sm leading-relaxed sm:text-base"
                     data-testid="panel-excerpt"
                   >
                     {excerpt}
@@ -218,11 +218,14 @@ const Banner = () => {
       .catch(() => setBodies((prev) => ({ ...prev, [id]: "" })));
   };
 
-  // Fetch the body on hover (no pause: the carousel keeps auto-scrolling).
+  // Pause auto-scroll while a tile is hovered (so it can be read).
   const handlePanelEnter = (id) => {
+    hoverRef.current = true;
     fetchBody(id);
   };
-  const handlePanelLeave = () => {};
+  const handlePanelLeave = () => {
+    hoverRef.current = false;
+  };
 
   // Single rAF clock drives the vertical scroll, the matching background
   // colour AND the circular 3D tilt of each panel.
@@ -251,7 +254,7 @@ const Banner = () => {
           inited = true;
         }
 
-        const idle = now - lastInteractRef.current > 2200;
+        const idle = !hoverRef.current && now - lastInteractRef.current > 2200;
         if (idle) container.scrollTop += (pitch / secPerPanel) * dt;
 
         // Keep scroll position inside the middle copy for a seamless loop.

@@ -1,12 +1,6 @@
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import axios from "axios";
 import logo from "../assets/logo_original_cropped.png";
-import jungleBg from "../assets/jungle_bg.png";
-import foliageTop from "../assets/plants/gen/foliage_top.png";
-import foliageBottom from "../assets/plants/gen/foliage_bottom.png";
-import foliageLeft from "../assets/plants/gen/foliage_left.png";
-import foliageRight from "../assets/plants/gen/foliage_right.png";
-import monstera from "../assets/plants/monstera.png";
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 const API = `${BACKEND_URL}/api`;
@@ -136,14 +130,7 @@ const Banner = () => {
       className="relative h-[100svh] min-h-[100svh] w-full overflow-hidden bg-neutral-950 text-white"
       data-testid="banner-section"
     >
-      {/* Base jungle background image (barely visible) */}
-      <div
-        className="absolute inset-0 z-0 bg-cover bg-center opacity-[0.13]"
-        style={{ backgroundImage: `url("${jungleBg}")` }}
-        aria-hidden="true"
-      />
-
-      {/* Animated colour tint that matches the on-screen photo (over the jungle) */}
+      {/* Animated colour tint that matches the on-screen photo */}
       <div
         ref={colorRef}
         className="pointer-events-none absolute inset-0 z-10"
@@ -183,50 +170,6 @@ const Banner = () => {
           className="logo-wiggle h-16 w-auto object-contain sm:h-20 md:h-24"
           draggable={false}
           data-testid="brand-logo"
-        />
-        {/* Small leaf accent next to the logo */}
-        <img
-          src={monstera}
-          alt=""
-          className="plant-shake-b pointer-events-none absolute -right-10 top-1 h-12 w-auto object-contain drop-shadow-lg sm:h-14"
-          draggable={false}
-          data-testid="plant-logo-leaf"
-        />
-      </div>
-
-      {/* Jungle foliage frame: cohesive vegetation framing every edge */}
-      <div className="pointer-events-none absolute inset-0 z-30" aria-hidden="true">
-        {/* Top canopy across the full width */}
-        <img
-          src={foliageTop}
-          alt=""
-          className="vine-sway absolute -top-1 left-0 h-[17%] w-full object-cover object-top drop-shadow-2xl sm:h-[20%]"
-          draggable={false}
-          data-testid="foliage-top"
-        />
-        {/* Left edge foliage */}
-        <img
-          src={foliageLeft}
-          alt=""
-          className="plant-shake-a absolute left-0 top-0 h-full w-[13%] object-cover object-left drop-shadow-2xl"
-          draggable={false}
-          data-testid="foliage-left"
-        />
-        {/* Right edge foliage */}
-        <img
-          src={foliageRight}
-          alt=""
-          className="plant-shake-b absolute right-0 top-0 h-full w-[13%] object-cover object-right drop-shadow-2xl"
-          draggable={false}
-          data-testid="foliage-right"
-        />
-        {/* Bottom band across the full width */}
-        <img
-          src={foliageBottom}
-          alt=""
-          className="plant-shake-a absolute -bottom-1 left-0 h-[24%] w-full object-cover object-bottom drop-shadow-2xl sm:h-[28%]"
-          draggable={false}
-          data-testid="foliage-bottom"
         />
       </div>
     </section>

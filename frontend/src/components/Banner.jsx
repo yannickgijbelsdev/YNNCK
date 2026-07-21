@@ -102,10 +102,10 @@ const Panel = React.forwardRef(
             draggable={false}
           />
 
-          {/* Floating title (right side) */}
+          {/* Floating title (left side) */}
           {title && (
             <div
-              className="floaty pointer-events-none absolute -top-6 right-2 z-10 text-right opacity-0 transition-opacity duration-500 group-hover:opacity-100 sm:-top-8 sm:right-4"
+              className="floaty pointer-events-none absolute -top-6 left-2 z-10 opacity-0 transition-opacity duration-500 group-hover:opacity-100 sm:-top-8 sm:left-4"
               data-testid="panel-title-wrap"
             >
               <h2
@@ -117,22 +117,22 @@ const Panel = React.forwardRef(
             </div>
           )}
 
-          {/* Floating white rounded body card (right side, rendered HTML) */}
+          {/* Floating white rounded body card (right side, vertically centred) */}
           {(hasBody || excerpt) && (
             <div
-              className="floaty-slow pointer-events-none absolute -bottom-5 left-4 right-4 z-10 opacity-0 transition-opacity duration-500 group-hover:opacity-100 sm:left-auto sm:right-6 sm:max-w-md"
+              className="pointer-events-none absolute right-2 top-1/2 z-10 w-[70%] -translate-y-1/2 opacity-0 transition-opacity duration-500 group-hover:opacity-100 sm:right-[-1.5rem] sm:w-auto sm:max-w-sm"
               data-testid="panel-excerpt-wrap"
             >
-              <div className="rounded-2xl bg-white/95 p-5 text-neutral-800 shadow-2xl backdrop-blur-sm">
+              <div className="floaty-slow rounded-2xl bg-white/95 p-5 text-neutral-800 shadow-2xl backdrop-blur-sm">
                 {hasBody ? (
                   <div
-                    className="panel-body max-h-40 overflow-hidden text-sm leading-relaxed sm:text-base"
+                    className="panel-body max-h-52 overflow-hidden text-sm leading-relaxed sm:text-base"
                     data-testid="panel-excerpt"
                     dangerouslySetInnerHTML={{ __html: html }}
                   />
                 ) : (
                   <p
-                    className="max-h-40 overflow-hidden text-sm leading-relaxed sm:text-base"
+                    className="max-h-52 overflow-hidden text-sm leading-relaxed sm:text-base"
                     data-testid="panel-excerpt"
                   >
                     {excerpt}
@@ -233,7 +233,7 @@ const Banner = () => {
     let raf;
     let last = performance.now();
     let inited = false;
-    const secPerPanel = 16;
+    const secPerPanel = 7;
 
     const mod = (n, m) => ((n % m) + m) % m;
 
